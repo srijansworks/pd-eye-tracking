@@ -4,7 +4,7 @@ Measuring saccade LATENCY requires knowing exactly when the target jumped,
 and measuring pursuit GAIN requires knowing how fast the target moved. So
 the pipeline drives its own stimulus and logs every target change.
 
-Protocol "eye_v1" (~85 s):
+Protocol "eye_v1" (~100 s):
   calibration  6 dots (centre, left, right, up, down, centre), 2 s each
   fixation     hold gaze on a centre dot for 15 s   -> fixation stability, intrusions
   prosaccade   centre -> random left/right jump, 20 trials -> latency, gain, velocity
