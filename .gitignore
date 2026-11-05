@@ -1,0 +1,22 @@
+# secrets
+.env
+.env.*
+!.env.example
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# model weights & recordings (never commit raw video or participant data)
+eye-tracking/models/
+eye-tracking/recordings/
+*.mp4
+*.mov
+*.avi
+# node
+node_modules/
+.next/
+web/next-env.d.ts
+*.tsbuildinfo
+.DS_Store
+*.egg-info/

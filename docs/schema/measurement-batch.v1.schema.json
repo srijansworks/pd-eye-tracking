@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/measurement-batch.v1.json",
+  "title": "Measurement batch v1",
+  "description": "One upload from one device for one assessment session. Shared by eye, wrist and gait modalities. Mirrored by web/lib/schema.ts (zod).",
+  "type": "object",
+  "required": ["schema_version", "session_id", "recording", "measurements"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "session_id": { "type": "string", "format": "uuid" },
+    "recording": {
+      "type": "object",
+      "required": ["modality", "started_at"],
+      "additionalProperties": false,
+      "properties": {
+        "modality": { "enum": ["eye", "wrist", "gait", "other"] },
+        "started_at": { "type": "string", "format": "date-time", "description": "UTC, ISO-8601, ms precision" },
+        "ended_at": { "type": ["string", "null"], "format": "date-time" },
+        "sample_rate_hz": { "type": ["number", "null"], "minimum": 0 },
+        "protocol": { "type": ["string", "null"], "maxLength": 64 },
+        "is_synthetic": { "type": "boolean", "default": false },
+        "clock": {
+          "type": "object",
+          "properties": {
+            "source": { "type": "string", "description": "e.g. system_utc, ntp, ble_host" },
+            "offset_ms": { "type": "number", "description": "add to device timestamps to get session-reference UTC" },
+            "sync_event": { "type": ["string", "null"] }
+          }
+        },
+        "device_info": { "type": "object", "description": "free-form descriptive metadata (camera, firmware, placement…)" },
+        "quality": { "type": "object", "description": "free-form recording-level quality summary" },
+        "raw_media_stored": { "type": "boolean", "default": false }
+      }
+    },
+    "measurements": {
+      "type": "array",
+      "maxItems": 5000,
+      "items": {
+        "type": "object",
+        "required": ["name", "value", "unit"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,63}$", "description": "snake_case; see docs/DATA_FORMAT.md registry" },
+          "value": { "type": "number" },
+          "unit": { "type": "string", "maxLength": 32, "description": "UCUM-like: ms, deg, deg/s, Hz, 1/min, ratio, px, m/s, g …" },
+          "t": { "type": ["string", "null"], "format": "date-time", "description": "null = summary over the recording/task; set for time-series points" },
+          "task": { "type": ["string", "null"], "maxLength": 64 },
+          "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+          "quality_flags": { "type": "array", "items": { "type": "string" } },
+          "metadata": { "type": "object" }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "maxItems": 5000,
+      "items": {
+        "type": "object",
+        "required": ["t", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "t": { "type": "string", "format": "date-time" },
+          "kind": { "type": "string", "maxLength": 64, "description": "e.g. target_step, pursuit_start, sync_tap, walk_start" },
+          "task": { "type": ["string", "null"], "maxLength": 64 },
+          "data": { "type": "object" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+Synthetic benchmark: measured / true (mean of 5 synthetic participants)
+
+measurement                         webcam 30fps      webcam 60fps         IR 120fps         IR 250fps        lab 500fps
+saccade_latency_median           199.23/197.48     201.77/197.48     197.22/197.48     202.26/197.48     203.78/197.48  
+saccade_peak_velocity_median     143.32/425.12     259.79/425.12     307.41/425.12     390.99/425.12     420.79/425.12  
+saccade_gain_median                0.93/0.95         0.95/0.95         0.95/0.95         0.95/0.95         0.95/0.95    
+pursuit_velocity_gain              0.90/0.85         0.92/0.85         0.84/0.85         0.85/0.85         0.85/0.85    
+pursuit_phase_lag                 31.16/60.00       35.01/60.00       59.45/60.00       58.79/60.00       59.58/60.00   
+blink_duration_mean              148.48/150.00     149.51/150.00     149.40/150.00     150.05/150.00     149.83/150.00  
+square_wave_jerk_rate              0.00/27.69        0.00/27.69       22.39/27.69       17.60/27.69       20.00/27.69   

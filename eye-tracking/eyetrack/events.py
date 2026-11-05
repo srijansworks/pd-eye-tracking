@@ -1,0 +1,169 @@
+"""Turn a gaze time series into eye-movement EVENTS: blinks, saccades, fixations.
+
+Saccade detection uses the adaptive velocity threshold of Engbert & Kliegl
+(2003, Vision Research 43:1035): the threshold is lambda x the median-based
+noise level of the velocity signal, so it adapts to how noisy each
+recording is instead of using one fixed deg/s number.
+
+Important limitation at webcam frame rates: a 10 deg saccade lasts ~40 ms,
+which is only 1-2 frames at 30 fps. We can tell THAT a saccade happened,
+WHEN (to within one frame) and HOW FAR the eye moved (comparing the frames
+before and after), but not its true peak velocity. tests/test_events.py
+quantifies this with synthetic data.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+import numpy as np
+
+
+@dataclass
+class Blink:
+    t_start: float
+    t_end: float
+    duration: float
+
+
+@dataclass
+class Saccade:
+    i_start: int
+    i_end: int
+    t_start: float
+    t_end: float
+    dx: float          # displacement (signal units), end - start
+    dy: float
+    amplitude: float
+    peak_velocity: float
+
+
+@dataclass
+class Fixation:
+    t_start: float
+    t_end: float
+    duration: float
+    x: float
+    y: float
+
+
+def _runs(mask: np.ndarray) -> list[tuple[int, int]]:
+    """(start, end_inclusive) index pairs of consecutive True values."""
+    if not mask.any():
+        return []
+    d = np.diff(np.concatenate([[0], mask.astype(np.int8), [0]]))
+    starts = np.where(d == 1)[0]
+    ends = np.where(d == -1)[0] - 1
+    return list(zip(starts, ends))
+
+
+def closed_eye_mask(blink_score: np.ndarray, ear: np.ndarray, frame_ok: np.ndarray) -> np.ndarray:
+    """Frames where the eyes are closed. Uses the blink blendshape when
+    available; otherwise an eye-aspect-ratio drop relative to this person's
+    own median open-eye EAR (so it adapts to eye shape)."""
+    ok = frame_ok == 1
+    closed = np.zeros(len(ok), bool)
+    if np.isfinite(blink_score[ok]).any():
+        closed |= ok & (blink_score > 0.5)
+    if np.isfinite(ear[ok]).any():
+        open_ear = np.nanmedian(ear[ok])
+        closed |= ok & (ear < 0.6 * open_ear)
+    return closed
+
+
+def detect_blinks(t: np.ndarray, closed: np.ndarray, max_blink_s: float = 0.5,
+                  bridge_s: float = 0.04) -> list[Blink]:
+    dt = float(np.median(np.diff(t))) if len(t) > 1 else 0.0
+    runs = _runs(closed)
+    # A single dropped/misdetected frame in the middle of a blink would split it
+    # into two short "blinks". Merge runs separated by a gap shorter than bridge_s.
+    merged: list[list[int]] = []
+    for a, b in runs:
+        if merged and t[a] - t[merged[-1][1]] <= bridge_s + dt:
+            merged[-1][1] = b
+        else:
+            merged.append([a, b])
+    out = []
+    for a, b in merged:
+        dur = (t[b] - t[a]) + dt  # frame-count based: resolution = 1 frame
+        if dur <= max_blink_s:
+            out.append(Blink(float(t[a]), float(t[b] + dt), float(dur)))
+    return out
+
+
+def velocity(t: np.ndarray, x: np.ndarray) -> np.ndarray:
+    """Velocity of x in units per second.
+
+    Below 100 fps: plain central difference (each frame matters; smoothing
+    would smear 1-2 frame saccades away). At >= 100 fps: the 5-point
+    moving-average differentiator of Engbert & Kliegl (2003), which
+    suppresses the extra noise that comes with tiny frame intervals.
+    NaNs (gaps, blinks) propagate to neighbouring velocity samples.
+    """
+    n = len(t)
+    if n < 5:
+        return np.full_like(x, np.nan, dtype=float)
+    dt = float(np.median(np.diff(t)))
+    if 1.0 / dt < 100:
+        return np.gradient(x, t)
+    v = np.full(n, np.nan)
+    v[2:-2] = (x[4:] + x[3:-1] - x[1:-3] - x[:-4]) / (6 * dt)
+    return v
+
+
+def detect_saccades(
+    t: np.ndarray, x: np.ndarray, y: np.ndarray, usable: np.ndarray,
+    lam: float = 6.0, min_amplitude: float = 0.0, min_velocity: float = 0.0,
+) -> list[Saccade]:
+    x = np.where(usable, x, np.nan)
+    y = np.where(usable, y, np.nan)
+    vx, vy = velocity(t, x), velocity(t, y)
+    finite = np.isfinite(vx) & np.isfinite(vy)
+    if finite.sum() < 10:
+        return []
+
+    def sigma(v):
+        s = np.sqrt(np.median(v ** 2) - np.median(v) ** 2)
+        return max(s, 1e-9)
+
+    ex, ey = lam * sigma(vx[finite]), lam * sigma(vy[finite])
+    speed = np.hypot(vx, vy)
+    above = finite & (((vx / ex) ** 2 + (vy / ey) ** 2) > 1.0) & (speed >= min_velocity)
+
+    out = []
+    for a, b in _runs(above):
+        # Displacement: compare the last usable sample BEFORE the event with
+        # the first usable sample AFTER it. With 1-2 frame saccades this
+        # captures the whole movement.
+        i0, i1 = a - 1, b + 1
+        while i0 >= 0 and not np.isfinite(x[i0]):
+            i0 -= 1
+        while i1 < len(x) and not np.isfinite(x[i1]):
+            i1 += 1
+        if i0 < 0 or i1 >= len(x) or (t[i1] - t[i0]) > 0.25:
+            continue  # movement hidden by a gap/blink; can't measure it
+        dx, dy = float(x[i1] - x[i0]), float(y[i1] - y[i0])
+        amp = float(np.hypot(dx, dy))
+        if amp < min_amplitude:
+            continue
+        out.append(Saccade(int(a), int(b), float(t[a]), float(t[b]), dx, dy, amp,
+                           float(np.nanmax(speed[a:b + 1]))))
+    return out
+
+
+def detect_fixations(
+    t: np.ndarray, x: np.ndarray, y: np.ndarray, usable: np.ndarray,
+    saccades: list[Saccade], min_duration: float = 0.1,
+) -> list[Fixation]:
+    """Fixation = usable stretch between saccades lasting >= min_duration."""
+    free = usable.copy()
+    for s in saccades:
+        free[max(0, s.i_start - 1): s.i_end + 2] = False
+    dt = float(np.median(np.diff(t))) if len(t) > 1 else 0.0
+    out = []
+    for a, b in _runs(free):
+        dur = t[b] - t[a] + dt
+        if dur >= min_duration:
+            out.append(Fixation(float(t[a]), float(t[b] + dt), float(dur),
+                                float(np.nanmedian(x[a:b + 1])), float(np.nanmedian(y[a:b + 1]))))
+    return out
