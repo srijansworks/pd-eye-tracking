@@ -1,0 +1,842 @@
+{
+  "schema_version": "1.0",
+  "session_id": "00000000-0000-4000-8000-000000000000",
+  "recording": {
+    "modality": "eye",
+    "started_at": "2026-11-04T18:00:00.000Z",
+    "ended_at": "2026-11-04T18:01:33.200Z",
+    "sample_rate_hz": 30.01,
+    "protocol": "eye_v1",
+    "is_synthetic": true,
+    "clock": {
+      "source": "system_utc",
+      "offset_ms": 0
+    },
+    "device_info": {
+      "kind": "synthetic",
+      "camera": {},
+      "illumination": "visible",
+      "software": "eyetrack 0.1.0",
+      "host": "macOS-26.6.2"
+    },
+    "quality": {
+      "n_frames": 2797,
+      "duration_s": 93.20062207482981,
+      "valid_frame_fraction": 0.9903468001430104,
+      "effective_fps": 30.014163289731094,
+      "frame_interval_jitter_ms": 1.3880498931750207,
+      "dropped_frame_count": 0,
+      "iris_diameter_px_median": 25.0,
+      "eye_brightness_median": 120.0,
+      "head_yaw_sd_deg": 0.4909292455612182,
+      "head_pitch_sd_deg": 0.4995334690141084,
+      "calibration_rmse_deg": 0.08272266808088988,
+      "flags": [
+        "low_fps"
+      ],
+      "unavailable": {
+        "pupil_diameter": "Needs infrared imaging; RGB webcam cannot separate pupil from iris."
+      },
+      "n_saccades": 58,
+      "n_blinks": 17
+    },
+    "raw_media_stored": false
+  },
+  "measurements": [
+    {
+      "name": "blink_rate",
+      "value": 10.944132960626083,
+      "unit": "1/min",
+      "task": "all",
+      "confidence": 0.99,
+      "quality_flags": [],
+      "metadata": {
+        "n_blinks": 17
+      },
+      "t": null
+    },
+    {
+      "name": "blink_duration_mean",
+      "value": 147.31246839908033,
+      "unit": "ms",
+      "task": "all",
+      "confidence": 0.248,
+      "quality_flags": [
+        "low_temporal_resolution"
+      ],
+      "metadata": {
+        "n_blinks": 17
+      },
+      "t": null
+    },
+    {
+      "name": "fixation_bcea_68",
+      "value": 1.9300072421723848,
+      "unit": "deg^2",
+      "task": "fixation",
+      "confidence": 0.898,
+      "quality_flags": [],
+      "metadata": {
+        "n_samples": 405,
+        "note": "Webcam noise inflates this; compare only within the same setup."
+      },
+      "t": null
+    },
+    {
+      "name": "fixation_sd_x",
+      "value": 0.6905935891994273,
+      "unit": "deg",
+      "task": "fixation",
+      "confidence": 0.898,
+      "quality_flags": [],
+      "metadata": {},
+      "t": null
+    },
+    {
+      "name": "fixation_sd_y",
+      "value": 0.3883575544646357,
+      "unit": "deg",
+      "task": "fixation",
+      "confidence": 0.898,
+      "quality_flags": [],
+      "metadata": {},
+      "t": null
+    },
+    {
+      "name": "intrusive_saccade_rate",
+      "value": 0.133100502393486,
+      "unit": "1/s",
+      "task": "fixation",
+      "confidence": 0.119,
+      "quality_flags": [
+        "undersampled"
+      ],
+      "metadata": {
+        "n": 2,
+        "min_amplitude": 1.0
+      },
+      "t": null
+    },
+    {
+      "name": "square_wave_jerk_rate",
+      "value": 0.0,
+      "unit": "1/min",
+      "task": "fixation",
+      "confidence": 0.119,
+      "quality_flags": [
+        "undersampled"
+      ],
+      "metadata": {
+        "n": 0,
+        "note": "Small (<1 deg) jerks are invisible at webcam noise levels."
+      },
+      "t": null
+    },
+    {
+      "name": "fixation_duration_mean",
+      "value": 1038.169470890357,
+      "unit": "ms",
+      "task": "fixation",
+      "confidence": 0.248,
+      "quality_flags": [
+        "low_temporal_resolution"
+      ],
+      "metadata": {
+        "n": 13
+      },
+      "t": null
+    },
+    {
+      "name": "saccade_latency_median",
+      "value": 191.42239620876467,
+      "unit": "ms",
+      "task": "prosaccade",
+      "confidence": 0.225,
+      "quality_flags": [
+        "low_temporal_resolution"
+      ],
+      "metadata": {
+        "n_trials": 18,
+        "resolution_ms": 33.3,
+        "note": "Includes a constant camera/display delay; see docs."
+      },
+      "t": null
+    },
+    {
+      "name": "saccade_latency_sd",
+      "value": 34.20666181504808,
+      "unit": "ms",
+      "task": "prosaccade",
+      "confidence": 0.225,
+      "quality_flags": [
+        "low_temporal_resolution"
+      ],
+      "metadata": {
+        "n_trials": 18
+      },
+      "t": null
+    },
+    {
+      "name": "saccade_amplitude_median",
+      "value": 9.696945246036682,
+      "unit": "deg",
+      "task": "prosaccade",
+      "confidence": 0.9,
+      "quality_flags": [],
+      "metadata": {
+        "n_trials": 18
+      },
+      "t": null
+    },
+    {
+      "name": "saccade_peak_velocity_median",
+      "value": 141.5727430694235,
+      "unit": "deg/s",
+      "task": "prosaccade",
+      "confidence": 0.108,
+      "quality_flags": [
+        "undersampled"
+      ],
+      "metadata": {
+        "n_trials": 18,
+        "note": "At < 250 fps this is a large UNDER-estimate of true peak velocity."
+      },
+      "t": null
+    },
+    {
+      "name": "saccade_gain_median",
+      "value": 0.9654597424668654,
+      "unit": "ratio",
+      "task": "prosaccade",
+      "confidence": 0.9,
+      "quality_flags": [],
+      "metadata": {
+        "n_trials": 18
+      },
+      "t": null
+    },
+    {
+      "name": "saccade_direction_error_rate",
+      "value": 0.0,
+      "unit": "ratio",
+      "task": "prosaccade",
+      "confidence": 0.99,
+      "quality_flags": [],
+      "metadata": {
+        "n_trials": 20
+      },
+      "t": null
+    },
+    {
+      "name": "pursuit_velocity_gain",
+      "value": 0.8854638919430661,
+      "unit": "ratio",
+      "task": "pursuit",
+      "confidence": 0.744,
+      "quality_flags": [],
+      "metadata": {
+        "freq_hz": 0.4,
+        "amplitude_deg": 10.0,
+        "n_samples": 335
+      },
+      "t": null
+    },
+    {
+      "name": "pursuit_phase_lag",
+      "value": 45.600331183547986,
+      "unit": "ms",
+      "task": "pursuit",
+      "confidence": 0.186,
+      "quality_flags": [
+        "low_temporal_resolution"
+      ],
+      "metadata": {
+        "freq_hz": 0.4,
+        "note": "Below ~120 fps small catch-up saccades go undetected and bias lag low / gain high (synthetic benchmark: 60 ms true -> ~30 ms at 30 fps)."
+      },
+      "t": null
+    },
+    {
+      "name": "pursuit_catchup_saccade_rate",
+      "value": 1.2672646722330907,
+      "unit": "1/s",
+      "task": "pursuit",
+      "confidence": 0.119,
+      "quality_flags": [
+        "undersampled"
+      ],
+      "metadata": {
+        "n": 19
+      },
+      "t": null
+    },
+    {
+      "name": "valid_frame_fraction",
+      "value": 0.9903468001430104,
+      "unit": "ratio",
+      "task": "all",
+      "confidence": 1.0,
+      "quality_flags": [],
+      "metadata": {},
+      "t": null
+    },
+    {
+      "name": "effective_fps",
+      "value": 30.014163289731094,
+      "unit": "Hz",
+      "task": "all",
+      "confidence": 1.0,
+      "quality_flags": [],
+      "metadata": {},
+      "t": null
+    },
+    {
+      "name": "iris_diameter_px",
+      "value": 25.0,
+      "unit": "px",
+      "task": "all",
+      "confidence": 1.0,
+      "quality_flags": [],
+      "metadata": {},
+      "t": null
+    },
+    {
+      "name": "calibration_rmse",
+      "value": 0.08272266808088988,
+      "unit": "deg",
+      "task": "calibration",
+      "confidence": 1.0,
+      "quality_flags": [],
+      "metadata": {},
+      "t": null
+    }
+  ],
+  "events": [
+    {
+      "t": "2026-11-04T18:00:00.000Z",
+      "kind": "target_step",
+      "task": "calibration",
+      "data": {
+        "x_deg": 0,
+        "y_deg": 0,
+        "from_x_deg": null,
+        "from_y_deg": null
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:02.000Z",
+      "kind": "target_step",
+      "task": "calibration",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0,
+        "from_x_deg": 0,
+        "from_y_deg": 0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:04.000Z",
+      "kind": "target_step",
+      "task": "calibration",
+      "data": {
+        "x_deg": 10.0,
+        "y_deg": 0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:06.000Z",
+      "kind": "target_step",
+      "task": "calibration",
+      "data": {
+        "x_deg": 0,
+        "y_deg": -7.0,
+        "from_x_deg": 10.0,
+        "from_y_deg": 0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:08.000Z",
+      "kind": "target_step",
+      "task": "calibration",
+      "data": {
+        "x_deg": 0,
+        "y_deg": 7.0,
+        "from_x_deg": 0,
+        "from_y_deg": -7.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:10.000Z",
+      "kind": "target_step",
+      "task": "calibration",
+      "data": {
+        "x_deg": 0,
+        "y_deg": 0,
+        "from_x_deg": 0,
+        "from_y_deg": 7.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:12.000Z",
+      "kind": "target_step",
+      "task": "fixation",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": null,
+        "from_y_deg": null
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:27.000Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": null,
+        "from_y_deg": null
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:28.323Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:29.523Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:30.918Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:32.118Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:33.191Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:34.391Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:35.756Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:36.956Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:38.866Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:40.066Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:41.103Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:42.303Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": 10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:43.722Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:44.922Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:46.012Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:47.212Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": 10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:48.271Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:49.471Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:51.419Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:52.619Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:54.196Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:55.396Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": 10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:56.446Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:57.646Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:58.692Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:00:59.892Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:01.182Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:02.382Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:03.922Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:05.122Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": 10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:06.683Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:07.883Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:08.986Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:10.186Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:11.558Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:12.758Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:14.323Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": -10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:15.523Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 0.0,
+        "y_deg": 0.0,
+        "from_x_deg": -10.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:17.019Z",
+      "kind": "target_step",
+      "task": "prosaccade",
+      "data": {
+        "x_deg": 10.0,
+        "y_deg": 0.0,
+        "from_x_deg": 0.0,
+        "from_y_deg": 0.0
+      }
+    },
+    {
+      "t": "2026-11-04T18:01:18.219Z",
+      "kind": "pursuit_start",
+      "task": "pursuit",
+      "data": {
+        "amplitude_deg": 10.0,
+        "freq_hz": 0.4
+      }
+    }
+  ]
+}
