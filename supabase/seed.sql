@@ -7,7 +7,7 @@ insert into auth.users (instance_id, id, aud, role, email, encrypted_password, e
                         confirmation_token, recovery_token, email_change_token_new, email_change)
 values ('00000000-0000-0000-0000-000000000000', '11111111-1111-4111-8111-111111111111',
         'authenticated', 'authenticated', 'dev@example.test',
-        crypt('devpassword123', gen_salt('bf')), now(),
+        extensions.crypt('devpassword123', extensions.gen_salt('bf')), now(),
         '{"provider":"email","providers":["email"]}', '{"display_name":"Dev Researcher"}',
         now(), now(), '', '', '', '')
 on conflict (id) do nothing;
