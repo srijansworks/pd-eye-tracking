@@ -1,0 +1,28 @@
+[project]
+name = "eyetrack"
+version = "0.1.0"
+description = "Webcam eye-movement measurement pipeline (research prototype, not a medical device)"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+  "mediapipe>=0.10.14",   # Apache-2.0 — face mesh + iris landmarks
+  "opencv-python>=4.9",   # Apache-2.0 — camera, display, drawing
+  "numpy>=1.26",
+  "matplotlib>=3.8",      # plots
+  "requests>=2.31",       # upload to backend
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "jsonschema>=4.21"]
+
+[project.scripts]
+eyetrack = "eyetrack.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["eyetrack"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
