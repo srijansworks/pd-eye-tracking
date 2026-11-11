@@ -231,3 +231,16 @@ def test_posture_guard_warns_after_drift_and_resets_at_drift_check():
     for _ in range(30):
         t += 1 / 30; g.update(t, "pursuit", 0.0, 18.5)
     assert not g.warning
+
+
+def test_gain_survives_tracker_smoothing():
+    """Real MediaPipe webcam data shows ~75 ms of temporal smoothing: saccades glide
+    into their landing point. Measuring amplitude at the settled landing point keeps
+    saccade gain close to the truth (it read 0.76 vs 0.94 settled before the fix)."""
+    g = []
+    for s in (1, 2, 3):
+        rec, stim, truth = simulate(fps=30, noise_deg=0.3, seed=s, smoothing_ms=75)
+        c = calibration.fit(rec, stim); calibration.apply(rec, c)
+        ms, _ = features.compute(rec, stim)
+        g.append({m["name"]: m["value"] for m in ms}["saccade_gain_median"])
+    assert np.mean(g) == pytest.approx(0.95, abs=0.05)
