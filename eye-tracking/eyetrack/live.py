@@ -78,6 +78,14 @@ def check_camera(index: int = 0, seconds: float = 10.0, show: bool = True) -> di
     closed = ev.closed_eye_mask(rec["blink_score"], rec["ear"], rec["frame_ok"])
     rep["blinks_detected"] = len(ev.detect_blinks(rec["t"], closed)) if len(rec) > 1 else 0
     rep["deepest_ear_dip"] = round(ev.ear_dip_depth(rec["ear"], rec["frame_ok"]), 3) if len(rec) > 10 else None
+    # Stillness test: how much did head pose and the eye baseline change between
+    # the first and last 5 s? With the head braced, real change should be ~0.
+    if len(rec) > 1 and rec["t"][-1] > 15:
+        t_ = rec["t"]; a = ok & (t_ < 5); b = ok & (t_ > t_[-1] - 5)
+        if a.sum() > 10 and b.sum() > 10:
+            for c in ("pitch", "yaw", "roll"):
+                rep[f"head_{c}_change_deg"] = round(float(np.nanmedian(rec[c][b]) - np.nanmedian(rec[c][a])), 2)
+            rep["eye_h_baseline_change"] = round(float(np.nanmedian(rec["h"][b]) - np.nanmedian(rec["h"][a])), 4)
     rep["blink_score_max"] = round(float(np.nanmax(rec["blink_score"][ok])), 3) if ok.any() else None
     adv = []
     if rep["effective_fps"] < 25:
