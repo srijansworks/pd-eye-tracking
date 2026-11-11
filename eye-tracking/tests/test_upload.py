@@ -70,3 +70,14 @@ def test_reads_eye_tracking_env_file(tmp_path, monkeypatch):
     assert up._cfg(None, None) == ("http://example.test", "dk_fromfile")
     monkeypatch.setenv("EYETRACK_DEVICE_KEY", "dk_env")       # real env var wins
     assert up._cfg(None, None)[1] == "dk_env"
+
+
+def test_warns_when_terminal_setting_overrides_env_file(tmp_path, monkeypatch, capsys):
+    import eyetrack.upload as up
+    env = tmp_path / ".env"
+    env.write_text("EYETRACK_API_URL=http://localhost:3000\nEYETRACK_DEVICE_KEY=dk_hosted\n")
+    monkeypatch.setattr(up, "ENV_FILE", env)
+    monkeypatch.setenv("EYETRACK_DEVICE_KEY", "dk_local_old")
+    monkeypatch.delenv("EYETRACK_API_URL", raising=False)
+    assert up._cfg(None, None)[1] == "dk_local_old"
+    assert "unset EYETRACK_DEVICE_KEY" in capsys.readouterr().out
