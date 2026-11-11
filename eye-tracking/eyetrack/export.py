@@ -22,6 +22,17 @@ def _iso(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
+def _clean(o):
+    """Replace NaN/inf with None recursively: NaN is not valid JSON and the API rejects it."""
+    if isinstance(o, float):
+        return o if o == o and o not in (float("inf"), float("-inf")) else None
+    if isinstance(o, dict):
+        return {k: _clean(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [_clean(v) for v in o]
+    return o
+
+
 def build_batch(rec: Recording, measurements: list[dict], quality: dict,
                 stim_events: list[dict], session_id: str | None = None) -> dict:
     started = rec.meta.get("started_at_utc")
@@ -50,10 +61,10 @@ def build_batch(rec: Recording, measurements: list[dict], quality: dict,
                 "software": f"eyetrack {__version__}",
                 "host": platform.platform(terse=True),
             },
-            "quality": quality,
+            "quality": _clean(quality),
             "raw_media_stored": False,
         },
-        "measurements": [{**m, "t": None} for m in measurements],
+        "measurements": [_clean({**m, "t": None}) for m in measurements if m["value"] == m["value"]],
         "events": [
             {"t": at(e["t"]), "kind": e["kind"], "task": e["task"],
              "data": {k: v for k, v in e.items() if k not in ("t", "kind", "task")}}

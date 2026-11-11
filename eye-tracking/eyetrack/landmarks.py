@@ -51,6 +51,8 @@ class EyeFrame:
     pitch: float = math.nan
     roll: float = math.nan
     brightness: float = math.nan
+    pupil_px: float = math.nan     # pupil diameter (near-eye IR camera only)
+    pupil_conf: float = math.nan   # pupil detector confidence 0..1 (IR only)
     points: dict | None = None   # pixel coords for drawing overlays
 
 

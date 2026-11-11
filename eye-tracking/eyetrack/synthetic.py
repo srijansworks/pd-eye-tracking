@@ -54,6 +54,7 @@ def simulate(
     offset_drift_deg: float = 0.0,
     pitch_drift_deg: float = 0.0,
     smoothing_ms: float = 0.0,
+    return_trajectory: bool = False,
     protocol: Protocol | None = None,
     seed: int = 1,
 ) -> tuple[Recording, list[dict], dict]:
@@ -144,6 +145,7 @@ def simulate(
     n_blinks = rng.poisson(blink_rate_per_min * T / 60)
     blink_starts = np.sort(rng.uniform(1, T - 1, n_blinks))
     real_blinks = 0
+    blink_list: list[tuple[float, float]] = []
     last_end = -1.0
     for b0 in blink_starts:
         if b0 < last_end + 0.3:
@@ -152,6 +154,7 @@ def simulate(
         if not m.any():
             continue
         real_blinks += 1
+        blink_list.append((float(b0), blink_duration_ms / 1000))
         last_end = b0 + blink_duration_ms / 1000
         blink_score[m] = 0.9; ear[m] = 0.08
         sy[m] += rng.normal(3, 1, m.sum())     # lids pull the iris landmarks down
@@ -193,4 +196,8 @@ def simulate(
         "swj_count": swj_count,
         "n_catchup": n_catchup,
     }
+    if return_trajectory:
+        # Clean 1 kHz eye trajectory + blink times, used to render near-eye IR video.
+        truth["_trajectory"] = (th, gx, gy)
+        truth["_blinks"] = blink_list
     return Recording(data, meta), stim, truth

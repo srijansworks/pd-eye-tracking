@@ -34,6 +34,13 @@ def _m(name, value, unit, task, confidence, flags=(), **metadata) -> dict:
 
 
 def quality_summary(rec: Recording) -> dict:
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)   # all-NaN columns (e.g. no head pose on glasses)
+        return _quality_summary(rec)
+
+
+def _quality_summary(rec: Recording) -> dict:
     t = rec["t"]
     dt = np.diff(t) if len(t) > 1 else np.array([np.nan])
     ok = rec["frame_ok"] == 1
@@ -118,10 +125,11 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
     okf = rec["frame_ok"] == 1
     tasks_arr = rec["task"]
     q["head_drift_deg"] = {}
+    has_pose = bool(np.isfinite(rec["pitch"]).any())   # no head pose from a head-mounted camera
     for task in ("fixation", "prosaccade", "pursuit"):
         tm = rec.task_mask(task) & okf
         task_flags[task], task_conf[task] = [], 1.0
-        if tm.sum() <= 10:
+        if tm.sum() <= 10 or not has_pose:
             continue
         # Reference pose = the calibration/drift-check block right before each
         # stretch of this task (eye_v2 recalibrates before every task).
@@ -323,9 +331,24 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
         if m["name"] in ("fixation_sd_y", "fixation_bcea_68") and "poor_vertical_calibration" in q["flags"]:
             m["quality_flags"] = sorted(set(m["quality_flags"]) | {"poor_vertical_calibration"})
 
-    q["unavailable"] = {
-        "pupil_diameter": "Needs infrared imaging; RGB webcam cannot separate pupil from iris.",
-    }
+    # ---- Pupil (near-eye IR camera only) ----------------------------
+    pupil = rec["pupil_px"]
+    if np.isfinite(pupil).sum() > 30:
+        found = float(np.isfinite(pupil).mean())
+        pv = pupil[np.isfinite(pupil) & ~near_blink]
+        mmpp = rec.meta.get("mm_per_px")
+        scale, unit = (mmpp, "mm") if mmpp else (1.0, "px")
+        out.append(_m("pupil_found_fraction", found, "ratio", "all", 1.0))
+        out.append(_m("pupil_diameter_median", float(np.median(pv)) * scale, unit, "all", found, base_flags,
+                      note=None if mmpp else "Pixels; set meta mm_per_px from a camera calibration to get mm."))
+        out.append(_m("pupil_diameter_cv", float(np.std(pv) / np.mean(pv)), "ratio", "all", found, base_flags,
+                      note="Variability of pupil size over the recording (includes normal hippus)."))
+        if "nearir" not in q["flags"]:
+            q["flags"].append("nearir")
+    else:
+        q["unavailable"] = {
+            "pupil_diameter": "Needs infrared imaging; RGB webcam cannot separate pupil from iris.",
+        }
     q["n_saccades"] = len(sacc)
     q["n_blinks"] = len(blinks)
     return out, q

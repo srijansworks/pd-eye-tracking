@@ -17,6 +17,8 @@ yaw/pitch/roll  head rotation in degrees (from the face transformation matrix)
 brightness   mean grey level (0-255) of the eye region
 task         protocol segment active when the frame was captured
 target_x/y   stimulus target position in degrees (NaN if no target)
+pupil_px     pupil diameter in pixels (near-eye IR camera only; NaN for webcam)
+pupil_conf   pupil detector confidence 0..1 (IR only)
 """
 
 from __future__ import annotations
@@ -31,6 +33,7 @@ import numpy as np
 COLUMNS = [
     "t", "frame_ok", "h", "v", "gx", "gy", "ear", "blink_score", "iris_px",
     "yaw", "pitch", "roll", "brightness", "task", "target_x", "target_y",
+    "pupil_px", "pupil_conf",
 ]
 NUMERIC = [c for c in COLUMNS if c != "task"]
 
@@ -39,6 +42,14 @@ NUMERIC = [c for c in COLUMNS if c != "task"]
 class Recording:
     data: dict[str, np.ndarray]
     meta: dict = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        # Columns added later (e.g. pupil_px) are filled with NaN / "" so code
+        # that builds recordings without them keeps working.
+        n = len(self.data["t"])
+        for c in COLUMNS:
+            if c not in self.data:
+                self.data[c] = np.array([""] * n, dtype=object) if c == "task" else np.full(n, np.nan)
 
     # ---- convenience -------------------------------------------------
     def __len__(self) -> int:
@@ -100,8 +111,9 @@ class Recording:
         rows = []
         with open(d / "samples.csv", newline="") as f:
             for r in csv.DictReader(f):
+                # .get(): recordings saved before a column existed still load.
                 rows.append({
-                    k: (r[k] if k == "task" else (float(r[k]) if r[k] != "" else np.nan))
+                    k: (r.get(k, "") if k == "task" else (float(r[k]) if r.get(k, "") not in ("", None) else np.nan))
                     for k in COLUMNS
                 })
         meta = json.loads((d / "meta.json").read_text()) if (d / "meta.json").exists() else {}
