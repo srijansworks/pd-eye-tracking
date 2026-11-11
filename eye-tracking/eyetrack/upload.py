@@ -33,6 +33,11 @@ def _env_file() -> dict[str, str]:
 
 def _cfg(api_url: str | None, key: str | None) -> tuple[str, str]:
     f = _env_file()
+    for name in ("EYETRACK_API_URL", "EYETRACK_DEVICE_KEY"):
+        if os.environ.get(name) and f.get(name) and os.environ[name] != f[name]:
+            # A leftover `export` in this terminal silently beats eye-tracking/.env; say so.
+            print(f"Note: using {name} from this terminal session, not from eye-tracking/.env. "
+                  f"Run `unset {name}` to use the .env value.")
     api_url = (api_url or os.environ.get("EYETRACK_API_URL") or f.get("EYETRACK_API_URL", "")).rstrip("/")
     key = key or os.environ.get("EYETRACK_DEVICE_KEY") or f.get("EYETRACK_DEVICE_KEY", "")
     if not api_url or not key:
