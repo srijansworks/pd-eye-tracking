@@ -179,3 +179,12 @@ def test_blink_detection_ignores_slow_gaze_related_ear_changes():
     ear[[60, 61, 62, 63]] = 0.08            # one real blink at t = 2 s
     closed = events.closed_eye_mask(np.full(len(t), np.nan), ear, np.ones(len(t)))
     assert len(events.detect_blinks(t, closed)) == 1
+
+
+def test_pursuit_position_gain_and_per_axis_calibration():
+    d, q, truth, cal = run(30, 0.5)
+    # Catch-up saccades keep the eye near the target, so position gain > smooth velocity gain.
+    assert 0.85 <= d["pursuit_position_gain"]["value"] <= 1.1
+    assert d["pursuit_position_gain"]["value"] >= d["pursuit_velocity_gain"]["value"] - 0.05
+    assert cal["rmse_x_deg"] < 0.5 and cal["rmse_y_deg"] < 0.5
+    assert "poor_calibration" not in q["flags"]

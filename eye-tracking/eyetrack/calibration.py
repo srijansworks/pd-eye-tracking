@@ -48,8 +48,12 @@ def fit(rec: Recording, events: list[dict]) -> dict | None:
     cy, *_ = np.linalg.lstsq(A, np.array(Y), rcond=None)
     pred = np.column_stack([A @ cx, A @ cy])
     err = np.hypot(pred[:, 0] - X, pred[:, 1] - Y)
+    # Per-axis error matters: webcam vertical tracking is much worse than
+    # horizontal (eyelids), and the timed tasks only use the horizontal axis.
     return {"method": "affine_v1", "coef_x": cx.tolist(), "coef_y": cy.tolist(),
-            "n_points": len(H), "rmse_deg": float(np.sqrt(np.mean(err ** 2)))}
+            "n_points": len(H), "rmse_deg": float(np.sqrt(np.mean(err ** 2))),
+            "rmse_x_deg": float(np.sqrt(np.mean((pred[:, 0] - X) ** 2))),
+            "rmse_y_deg": float(np.sqrt(np.mean((pred[:, 1] - Y) ** 2)))}
 
 
 def apply(rec: Recording, cal: dict) -> None:
