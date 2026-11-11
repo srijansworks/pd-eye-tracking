@@ -45,8 +45,11 @@ def check_camera(index: int = 0, seconds: float = 10.0, show: bool = True) -> di
                 if show:
                     img = fr.image.copy()
                     draw_overlay(img, ef)
-                    txt = f"iris {ef.iris_px:.0f}px  bright {ef.brightness:.0f}" if ef.ok else ""
+                    txt = (f"iris {ef.iris_px:.0f}px  bright {ef.brightness:.0f}  EAR {ef.ear:.3f}  "
+                           f"blink {ef.blink_score:.2f}") if ef.ok else ""
                     cv2.putText(img, txt, (20, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
+                    cv2.putText(img, "BLINK SLOWLY 3 TIMES during this check", (20, 120),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
                     cv2.imshow(WIN, img)
             if show and (cv2.waitKey(1) & 0xFF) == 27:
                 break
@@ -69,6 +72,13 @@ def check_camera(index: int = 0, seconds: float = 10.0, show: bool = True) -> di
         "h_noise_sd": round(float(np.nanstd(np.diff(rec["h"][ok]))), 5) if ok.sum() > 2 else None,
         "dropped_frames": dropped,
     }
+    # Blink self-test: the user is asked to blink 3 times. If the tracker sees none,
+    # blink measurements from this setup can't be trusted.
+    from . import events as ev
+    closed = ev.closed_eye_mask(rec["blink_score"], rec["ear"], rec["frame_ok"])
+    rep["blinks_detected"] = len(ev.detect_blinks(rec["t"], closed)) if len(rec) > 1 else 0
+    rep["deepest_ear_dip"] = round(ev.ear_dip_depth(rec["ear"], rec["frame_ok"]), 3) if len(rec) > 10 else None
+    rep["blink_score_max"] = round(float(np.nanmax(rec["blink_score"][ok])), 3) if ok.any() else None
     adv = []
     if rep["effective_fps"] < 25:
         adv.append("Frame rate below 25 fps: improve lighting (auto-exposure lengthens frames in dim light).")
@@ -78,6 +88,10 @@ def check_camera(index: int = 0, seconds: float = 10.0, show: bool = True) -> di
         adv.append("Iris < 20 px across: sit closer (~45-55 cm) or use a higher-resolution camera.")
     if rep["eye_brightness_median"] is not None and rep["eye_brightness_median"] < 60:
         adv.append("Eye region is dark: add a lamp in front of you (not behind).")
+    if rep["blinks_detected"] < 2:
+        adv.append("Fewer than 2 blinks detected although you were asked to blink 3 times: "
+                   "blink measurements are NOT reliable with this setup (see deepest_ear_dip; "
+                   "a real blink should dip well below 0.7).")
     rep["advice"] = adv or ["Setup looks usable for webcam-grade measurements."]
     rep["frames_raw"] = rec  # caller may save it
     return rep

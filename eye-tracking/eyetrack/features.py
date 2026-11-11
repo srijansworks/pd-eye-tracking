@@ -93,8 +93,29 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
     near_blink = np.convolve(closed.astype(int), np.ones(2 * pad + 1), "same") > 0
     usable = (rec["frame_ok"] == 1) & ~near_blink & np.isfinite(x)
 
-    sacc = ev.detect_saccades(t, x, y, usable, min_amplitude=min_amp, min_velocity=min_vel)
+    # After calibration every eye_v1 target moves HORIZONTALLY only, so saccades
+    # are detected on the horizontal channel. On real webcam data the vertical
+    # channel is the weaker one (eyelids cover the iris top/bottom, and head
+    # pitch changes leak into it), and it only added noise here.
+    sacc = ev.detect_saccades(t, x, np.zeros_like(x), usable, min_amplitude=min_amp, min_velocity=min_vel)
     out: list[dict] = []
+
+    # Head drift since calibration: the affine calibration is only valid for the
+    # head pose it was fitted in. Flag tasks where the head turned/tilted > 3 deg.
+    task_flags: dict[str, list[str]] = {}
+    task_conf: dict[str, float] = {}
+    cm = rec.task_mask("calibration") & (rec["frame_ok"] == 1)
+    q["head_drift_deg"] = {}
+    for task in ("fixation", "prosaccade", "pursuit"):
+        tm = rec.task_mask(task) & (rec["frame_ok"] == 1)
+        task_flags[task], task_conf[task] = [], 1.0
+        if cm.sum() > 10 and tm.sum() > 10:
+            drift = max(abs(np.nanmedian(rec[a][tm]) - np.nanmedian(rec[a][cm])) for a in ("yaw", "pitch"))
+            q["head_drift_deg"][task] = round(float(drift), 2)
+            if drift > 3.0:
+                task_flags[task], task_conf[task] = ["head_moved_since_calibration"], 0.6
+    if any(task_flags.values()) and "head_drift" not in q["flags"]:
+        q["flags"].append("head_drift")
     timing_flags = ["low_temporal_resolution"] if fps < FPS_FOR_TIMING else []
     timing_factor = min(1.0, fps / FPS_FOR_TIMING)
 
@@ -243,6 +264,13 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
         out.append(_m("iris_diameter_px", q["iris_diameter_px_median"], "px", "all", 1.0))
     if "calibration_rmse_deg" in q:
         out.append(_m("calibration_rmse", q["calibration_rmse_deg"], "deg", "calibration", 1.0))
+
+    for m in out:
+        if task_flags.get(m["task"]):
+            m["quality_flags"] = sorted(set(m["quality_flags"]) | set(task_flags[m["task"]]))
+            m["confidence"] = round(m["confidence"] * task_conf[m["task"]], 3)
+        if m["name"] == "fixation_sd_y":
+            m["quality_flags"] = sorted(set(m["quality_flags"]) | {"vertical_less_reliable"})
 
     q["unavailable"] = {
         "pupil_diameter": "Needs infrared imaging; RGB webcam cannot separate pupil from iris.",

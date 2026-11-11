@@ -159,3 +159,23 @@ def test_batch_matches_shared_json_schema():
     assert all(np.isfinite(m["value"]) for m in batch["measurements"])
     assert batch["recording"]["is_synthetic"] is True
     assert batch["events"][0]["t"].startswith("2026-11-04T20:00")
+
+
+def test_head_drift_after_calibration_is_flagged():
+    # Seen in the first real recording: head pitch crept up ~7 deg after calibration.
+    rec, stim, _ = simulate(fps=30, noise_deg=0.4)
+    rec.data["pitch"] = rec["pitch"] + np.where(rec.task_mask("pursuit"), 6.0, 0.0)
+    c = calibration.fit(rec, stim); calibration.apply(rec, c)
+    ms, q = features.compute(rec, stim)
+    d = {m["name"]: m for m in ms}
+    assert "head_drift" in q["flags"] and q["head_drift_deg"]["pursuit"] > 5
+    assert "head_moved_since_calibration" in d["pursuit_velocity_gain"]["quality_flags"]
+    assert "head_moved_since_calibration" not in d["saccade_gain_median"]["quality_flags"]
+
+
+def test_blink_detection_ignores_slow_gaze_related_ear_changes():
+    t = np.arange(0, 10, 1 / 30)
+    ear = 0.30 - 0.06 * (t > 5)            # looking down: lids narrow for 5 s (not a blink)
+    ear[[60, 61, 62, 63]] = 0.08            # one real blink at t = 2 s
+    closed = events.closed_eye_mask(np.full(len(t), np.nan), ear, np.ones(len(t)))
+    assert len(events.detect_blinks(t, closed)) == 1

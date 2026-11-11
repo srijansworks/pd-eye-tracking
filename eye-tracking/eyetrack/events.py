@@ -58,17 +58,45 @@ def _runs(mask: np.ndarray) -> list[tuple[int, int]]:
 
 
 def closed_eye_mask(blink_score: np.ndarray, ear: np.ndarray, frame_ok: np.ndarray) -> np.ndarray:
-    """Frames where the eyes are closed. Uses the blink blendshape when
-    available; otherwise an eye-aspect-ratio drop relative to this person's
-    own median open-eye EAR (so it adapts to eye shape)."""
+    """Frames where the eyes are closed: the blink blendshape > 0.5, OR the
+    eye aspect ratio drops below 70% of its own rolling ~1 s median.
+
+    Why a rolling baseline: EAR also changes with gaze direction (looking
+    down narrows the lids), so a single whole-recording median can mistake
+    looking down for a blink, or miss blinks while looking up."""
     ok = frame_ok == 1
     closed = np.zeros(len(ok), bool)
     if np.isfinite(blink_score[ok]).any():
         closed |= ok & (blink_score > 0.5)
-    if np.isfinite(ear[ok]).any():
-        open_ear = np.nanmedian(ear[ok])
-        closed |= ok & (ear < 0.6 * open_ear)
+    if np.isfinite(ear[ok]).sum() > 5:
+        e = np.where(ok, ear, np.nan)
+        w = 31  # ~1 s at 30 fps; long enough that a blink doesn't drag the median down
+        pad = np.pad(e, (w // 2, w // 2), mode="edge")
+        from numpy.lib.stride_tricks import sliding_window_view
+        with np.errstate(all="ignore"):
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                base = np.nanmedian(sliding_window_view(pad, w), axis=1)
+        closed |= ok & (ear < 0.7 * base)
     return closed
+
+
+def ear_dip_depth(ear: np.ndarray, frame_ok: np.ndarray) -> float:
+    """Deepest EAR dip relative to its rolling median (1.0 = never dipped).
+    Used by the camera check to confirm blinks are visible to the tracker."""
+    ok = frame_ok == 1
+    if np.isfinite(ear[ok]).sum() < 10:
+        return float("nan")
+    e = np.where(ok, ear, np.nan)
+    w = 31
+    pad = np.pad(e, (w // 2, w // 2), mode="edge")
+    from numpy.lib.stride_tricks import sliding_window_view
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        base = np.nanmedian(sliding_window_view(pad, w), axis=1)
+        return float(np.nanmin(e / base))
 
 
 def detect_blinks(t: np.ndarray, closed: np.ndarray, max_blink_s: float = 0.5,
