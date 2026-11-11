@@ -149,8 +149,16 @@ def main(argv: list[str] | None = None) -> None:
         benchmark()
     elif args.cmd == "upload":
         from .upload import create_session, upload_batch
-        batch = json.loads(Path(args.dir, "measurements.json").read_text())
-        batch["session_id"] = args.session_id or create_session(args.participant, batch["recording"].get("protocol") or "eye_v1")
+        path = Path(args.dir, "measurements.json")
+        batch = json.loads(path.read_text())
+        if args.session_id:
+            batch["session_id"] = args.session_id
+        elif not batch.get("session_id"):
+            batch["session_id"] = create_session(args.participant, batch["recording"].get("protocol") or "eye_v1")
+        else:
+            print(f"Reusing session {batch['session_id']} saved from a previous upload.")
+        # Save the session id so re-running upload is a safe retry, not a new session.
+        path.write_text(json.dumps(batch, indent=2))
         print(json.dumps(upload_batch(batch), indent=2))
 
 

@@ -56,7 +56,7 @@ npx supabase db reset
 
 3. Give the website the database address and public key:
 ```bash
-npx supabase status -o env --override-name api.url=NEXT_PUBLIC_SUPABASE_URL --override-name auth.anon_key=NEXT_PUBLIC_SUPABASE_ANON_KEY | grep '^NEXT_PUBLIC_' | tr -d '"' > web/.env.local && cat web/.env.local
+npx supabase status -o env | grep -E '^(API_URL|ANON_KEY)=' | sed -e 's/^API_URL=/NEXT_PUBLIC_SUPABASE_URL=/' -e 's/^ANON_KEY=/NEXT_PUBLIC_SUPABASE_ANON_KEY=/' | tr -d '"' > web/.env.local && cat web/.env.local
 ```
 You should see two lines, both with values. If either is empty, run `npx supabase status` and copy the "API URL" and "anon key" into `web/.env.local` by hand.
 
