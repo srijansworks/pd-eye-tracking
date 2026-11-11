@@ -51,8 +51,22 @@ def test_bad_key_is_a_clear_error(server):
         upload_batch({"session_id": "s", "measurements": []}, api_url=server, key="dk_wrong")
 
 
-def test_missing_config_is_a_clear_error(monkeypatch):
+def test_missing_config_is_a_clear_error(monkeypatch, tmp_path):
+    import eyetrack.upload as up
+    monkeypatch.setattr(up, "ENV_FILE", tmp_path / "missing.env")  # ignore a real .env on this machine
     monkeypatch.delenv("EYETRACK_API_URL", raising=False)
     monkeypatch.delenv("EYETRACK_DEVICE_KEY", raising=False)
     with pytest.raises(SystemExit, match="EYETRACK_API_URL"):
         upload_batch({"session_id": "s"})
+
+
+def test_reads_eye_tracking_env_file(tmp_path, monkeypatch):
+    import eyetrack.upload as up
+    env = tmp_path / ".env"
+    env.write_text('# comment\nEYETRACK_API_URL="http://example.test/"\nEYETRACK_DEVICE_KEY=dk_fromfile\n')
+    monkeypatch.setattr(up, "ENV_FILE", env)
+    monkeypatch.delenv("EYETRACK_API_URL", raising=False)
+    monkeypatch.delenv("EYETRACK_DEVICE_KEY", raising=False)
+    assert up._cfg(None, None) == ("http://example.test", "dk_fromfile")
+    monkeypatch.setenv("EYETRACK_DEVICE_KEY", "dk_env")       # real env var wins
+    assert up._cfg(None, None)[1] == "dk_env"

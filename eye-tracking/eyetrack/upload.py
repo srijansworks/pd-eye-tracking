@@ -12,13 +12,29 @@ Environment variables (see .env.example):
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import requests
 
+ENV_FILE = Path(__file__).resolve().parent.parent / ".env"   # eye-tracking/.env (git-ignored)
+
+
+def _env_file() -> dict[str, str]:
+    """Minimal KEY=VALUE reader for eye-tracking/.env. Real environment variables win."""
+    out: dict[str, str] = {}
+    if ENV_FILE.exists():
+        for line in ENV_FILE.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                out[k.strip()] = v.strip().strip('"').strip("'")
+    return out
+
 
 def _cfg(api_url: str | None, key: str | None) -> tuple[str, str]:
-    api_url = (api_url or os.environ.get("EYETRACK_API_URL", "")).rstrip("/")
-    key = key or os.environ.get("EYETRACK_DEVICE_KEY", "")
+    f = _env_file()
+    api_url = (api_url or os.environ.get("EYETRACK_API_URL") or f.get("EYETRACK_API_URL", "")).rstrip("/")
+    key = key or os.environ.get("EYETRACK_DEVICE_KEY") or f.get("EYETRACK_DEVICE_KEY", "")
     if not api_url or not key:
         raise SystemExit("Set EYETRACK_API_URL and EYETRACK_DEVICE_KEY (see .env.example).")
     return api_url, key
