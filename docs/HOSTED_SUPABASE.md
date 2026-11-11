@@ -36,10 +36,13 @@ npx supabase link --project-ref <project-ref>
 ```
 When asked for the database password, paste it from your password manager. It won't show as you type; that's normal.
 ```bash
-npx supabase db push
+npx supabase db push --remote
 ```
-It lists 3 migrations (`core_schema`, `rls_and_api`, `raw_media_storage`). Type `Y`.
-**Expected:** `Finished supabase db push.`
+**Include `--remote`.** If your local Docker database is running, plain `db push` silently targets the *local*
+database and says "Local database is up to date". The first line must say `Target: project … · production`.
+It lists 3 migrations (`core_schema`, `rls_and_api`, `raw_media_storage`) and **no seeds**. Type `Y`.
+**Expected:** `Applying migration …` three times, then `Finished supabase db push.`
+Check: `npx supabase migration list --remote` shows all three in the **remote** column.
 
 ## 4. Auth settings (browser)
 Dashboard → **Authentication** → **URL Configuration**:
