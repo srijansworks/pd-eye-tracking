@@ -105,6 +105,10 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
     # channel is the weaker one (eyelids cover the iris top/bottom, and head
     # pitch changes leak into it), and it only added noise here.
     sacc = ev.detect_saccades(t, x, np.zeros_like(x), usable, min_amplitude=min_amp, min_velocity=min_vel)
+    # Pursuit: the eye is always moving, so extending saccade ends or waiting for it
+    # to "settle" makes no sense there; use plain threshold detection.
+    sacc_pursuit = ev.detect_saccades(t, x, np.zeros_like(x), usable, min_amplitude=min_amp,
+                                      min_velocity=min_vel, extend_tail=False)
     out: list[dict] = []
 
     # Head drift since calibration: the affine calibration is only valid for the
@@ -247,7 +251,7 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
         A, f = e["amplitude_deg"], e["freq_hz"]
         w = 2 * math.pi * f
         pu = usable & pm & (t >= e["t"] + 1.0)  # skip pursuit initiation
-        for s in sacc:
+        for s in sacc_pursuit:
             pu[max(0, s.i_start - 1): s.i_end + 2] = False  # "desaccade"
         vx = ev.velocity(t, np.where(usable, x, np.nan))
         # Drop residual velocity spikes (missed saccade edges) — > 3x the target's peak speed.
@@ -285,7 +289,7 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
             (a2, b2, _c2), *_ = np.linalg.lstsq(M, x[pp], rcond=None)
             out.append(_m("pursuit_position_gain", math.hypot(a2, b2) / A, "ratio", "pursuit",
                           pp.sum() / pm.sum(), base_flags, freq_hz=f, amplitude_deg=A))
-        pur_sacc = [s for s in sacc if pm[s.i_start]]
+        pur_sacc = [s for s in sacc_pursuit if pm[s.i_start]]
         pdur = pm.sum() / fps if fps > 0 else 0
         if pdur > 3:
             out.append(_m("pursuit_catchup_saccade_rate", len(pur_sacc) / pdur, "1/s", "pursuit",

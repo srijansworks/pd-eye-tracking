@@ -53,6 +53,7 @@ def simulate(
     scale_drift: float = 0.0,
     offset_drift_deg: float = 0.0,
     pitch_drift_deg: float = 0.0,
+    smoothing_ms: float = 0.0,
     protocol: Protocol | None = None,
     seed: int = 1,
 ) -> tuple[Recording, list[dict], dict]:
@@ -129,6 +130,13 @@ def simulate(
     ts.sort()
     sx = np.interp(ts, th, gx) + rng.normal(0, noise_deg, len(ts))
     sy = np.interp(ts, th, gy) + rng.normal(0, noise_deg, len(ts))
+    if smoothing_ms > 0:
+        # Tracker-style temporal smoothing (first-order low-pass), as seen in real
+        # MediaPipe webcam data: saccades "glide" into their landing point.
+        alpha = 1 - np.exp(-(1 / fps) / (smoothing_ms / 1000))
+        for arr in (sx, sy):
+            for i in range(1, len(arr)):
+                arr[i] = arr[i - 1] + alpha * (arr[i] - arr[i - 1])
 
     n = len(ts)
     blink_score = np.clip(rng.normal(0.05, 0.03, n), 0, 1)

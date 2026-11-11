@@ -142,6 +142,7 @@ def velocity(t: np.ndarray, x: np.ndarray) -> np.ndarray:
 def detect_saccades(
     t: np.ndarray, x: np.ndarray, y: np.ndarray, usable: np.ndarray,
     lam: float = 6.0, min_amplitude: float = 0.0, min_velocity: float = 0.0,
+    extend_tail: bool = True, settle_s: float = 0.25,
 ) -> list[Saccade]:
     x = np.where(usable, x, np.nan)
     y = np.where(usable, y, np.nan)
@@ -158,8 +159,32 @@ def detect_saccades(
     speed = np.hypot(vx, vy)
     above = finite & (((vx / ex) ** 2 + (vy / ey) ** 2) > 1.0) & (speed >= min_velocity)
 
+    # Offset extension: real webcam data (MediaPipe landmark smoothing + motion
+    # blur) shows each saccade "gliding" into its landing point over 100-200 ms.
+    # Ending the saccade at the detection threshold cut off ~25% of its size
+    # (first real recording: gain 0.76 vs settled 0.94). So after detection we
+    # keep extending the end while the eye still moves the same way faster than
+    # a low threshold (20% of the detection threshold), for at most 200 ms.
+    end_thr = 0.2 * max(ex, ey)
+    dt_med = float(np.median(np.diff(t))) if len(t) > 1 else 0.0
+    max_ext = int(round(0.2 / dt_med)) if dt_med > 0 else 0
+
     out = []
-    for a, b in _runs(above):
+    last_end = -1
+    runs = _runs(above)
+    for k, (a, b) in enumerate(runs):
+        if a <= last_end:
+            continue  # already swallowed by the previous saccade's extended tail
+        dvx, dvy = np.nansum(vx[a:b + 1]), np.nansum(vy[a:b + 1])
+        norm = float(np.hypot(dvx, dvy)) or 1.0
+        ux, uy = dvx / norm, dvy / norm
+        b_detect = b  # end before tail extension (used for the gap check below)
+        ext = 0
+        while (extend_tail and ext < max_ext and b + 1 < len(x) and np.isfinite(vx[b + 1]) and np.isfinite(vy[b + 1])
+               and (vx[b + 1] * ux + vy[b + 1] * uy) > end_thr):
+            b += 1
+            ext += 1
+        last_end = b
         # Displacement: compare the last usable sample BEFORE the event with
         # the first usable sample AFTER it. With 1-2 frame saccades this
         # captures the whole movement.
@@ -168,9 +193,29 @@ def detect_saccades(
             i0 -= 1
         while i1 < len(x) and not np.isfinite(x[i1]):
             i1 += 1
-        if i0 < 0 or i1 >= len(x) or (t[i1] - t[i0]) > 0.25:
-            continue  # movement hidden by a gap/blink; can't measure it
-        dx, dy = float(x[i1] - x[i0]), float(y[i1] - y[i0])
+        if i0 < 0 or i1 >= len(x):
+            continue
+        # Movement hidden by a gap/blink -> can't measure it. Judge this on the
+        # detected part only: the extended tail is allowed to be long.
+        j = b_detect + 1
+        while j < len(x) and not np.isfinite(x[j]):
+            j += 1
+        if j >= len(x) or (t[j] - t[i0]) > 0.25:
+            continue
+        x1, y1 = x[i1], y[i1]
+        if extend_tail and settle_s > 0 and dt_med > 0:
+            # Landing point = where the eye SETTLES: median of the last third of
+            # the next `settle_s` seconds, stopping before the next saccade (so a
+            # corrective saccade is not counted). Tracker smoothing (~75 ms in
+            # real MediaPipe data) has mostly decayed by then.
+            nxt = next((ra for ra, _ in runs[k + 1:] if ra > b), len(x))
+            j_end = min(b + int(round(settle_s / dt_med)), nxt - 1, len(x) - 1)
+            seg = np.arange(b + 1, j_end + 1)
+            if len(seg) >= 3:
+                tail = seg[len(seg) * 2 // 3:]
+                if np.isfinite(x[tail]).sum() >= 1:
+                    x1, y1 = np.nanmedian(x[tail]), np.nanmedian(y[tail])
+        dx, dy = float(x1 - x[i0]), float(y1 - y[i0])
         amp = float(np.hypot(dx, dy))
         if amp < min_amplitude:
             continue

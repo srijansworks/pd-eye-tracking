@@ -92,6 +92,10 @@ Not clinical values; one healthy person, three runs on the same day.
 | pursuit position gain | 0.93 | 0.78 | 0.70 |
 | blinks detected | 0 | 6 | 4 |
 
+Run 4 (protocol **eye_v2** with drift checks, after the smoothing fix): no head-drift flags,
+calibration error x 0.32°, eye-signal scale drift −2%, saccade latency 231 ms, **saccade gain 0.92**,
+pursuit position gain 0.86, 0 direction errors in 20 trials.
+
 What we learned and fixed:
 * **Latency repeats** within ~15 ms; **gains drifted** with posture → drift checks + posture warning (eye_v2).
 * The **vertical** channel is much worse than horizontal on a webcam → timed tasks use horizontal only;
@@ -107,7 +111,12 @@ What we learned and fixed:
 2. **Absolute latency includes camera + display delay** (typically tens of ms, constant per setup).
    Compare latencies only within the same hardware, or measure the delay (film the screen and
    your eye with a 240 fps phone camera).
-3. MediaPipe smooths landmarks over time, which further dampens fast movements. We have not quantified this yet.
+3. **Tracker smoothing (measured):** in real recordings each saccade glides into its landing point over
+   ~150 ms (about 75 ms of first-order smoothing from MediaPipe + motion blur). Ending a saccade at the
+   speed threshold under-read gain (0.76 vs 0.94 settled), so saccade amplitude is now taken at the
+   **settled landing point** (≤ 250 ms after the saccade, stopping before any corrective saccade).
+   Synthetic check with 75 ms smoothing: gain 0.93 (true 0.95). Remaining effects of smoothing:
+   latency reads ~15 ms late (constant per setup) and pursuit velocity gain reads slightly high.
 4. Calibration is linear and assumes a still head. Glasses, heavy eye makeup, drooping lids or
    very dark rooms reduce tracking quality (shown in `valid_frame_fraction` and the flags).
 5. `confidence` is a heuristic data-quality score, not a statistical interval.
