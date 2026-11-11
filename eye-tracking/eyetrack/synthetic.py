@@ -26,7 +26,7 @@ import math
 import numpy as np
 
 from .recording import Recording
-from .stimulus import Protocol, eye_v1
+from .stimulus import Protocol, eye_v1, eye_v2
 
 K_H = 0.0075  # eye widths per degree, roughly realistic for MediaPipe h/v
 
@@ -50,11 +50,14 @@ def simulate(
     swj_amp_deg: float = 2.0,
     dropout: float = 0.01,
     jitter_ms: float = 1.0,
+    scale_drift: float = 0.0,
+    offset_drift_deg: float = 0.0,
+    pitch_drift_deg: float = 0.0,
     protocol: Protocol | None = None,
     seed: int = 1,
 ) -> tuple[Recording, list[dict], dict]:
     rng = np.random.default_rng(seed)
-    proto = protocol or eye_v1(seed=seed)
+    proto = protocol or eye_v2(seed=seed)
     stim = proto.step_events()
     T = proto.duration
     dt = 0.001
@@ -146,7 +149,10 @@ def simulate(
         sy[m] += rng.normal(3, 1, m.sum())     # lids pull the iris landmarks down
     frame_ok = (rng.random(n) > dropout).astype(float)
 
-    h = -K_H * sx + 0.01 + rng.normal(0, 1e-4, n)
+    # Posture drift (seen in real webcam recordings): the eye-signal scale and
+    # offset change slowly over the session while the head tilts.
+    frac = ts / T
+    h = -K_H * (1 + scale_drift * frac) * sx + 0.01 - K_H * offset_drift_deg * frac + rng.normal(0, 1e-4, n)
     v = K_H * sy - 0.02
     h[frame_ok == 0] = np.nan; v[frame_ok == 0] = np.nan
 
@@ -161,7 +167,7 @@ def simulate(
         "t": ts, "frame_ok": frame_ok, "h": h, "v": v,
         "gx": np.full(n, np.nan), "gy": np.full(n, np.nan),
         "ear": ear, "blink_score": blink_score, "iris_px": np.full(n, 25.0),
-        "yaw": rng.normal(0, 0.5, n), "pitch": rng.normal(0, 0.5, n), "roll": rng.normal(0, 0.3, n),
+        "yaw": rng.normal(0, 0.5, n), "pitch": rng.normal(0, 0.5, n) + pitch_drift_deg * frac, "roll": rng.normal(0, 0.3, n),
         "brightness": np.full(n, 120.0),
         "task": np.array(tasks, dtype=object), "target_x": np.array(tx), "target_y": np.array(ty),
     }

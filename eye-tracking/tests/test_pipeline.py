@@ -188,3 +188,46 @@ def test_pursuit_position_gain_and_per_axis_calibration():
     assert d["pursuit_position_gain"]["value"] >= d["pursuit_velocity_gain"]["value"] - 0.05
     assert cal["rmse_x_deg"] < 0.5 and cal["rmse_y_deg"] < 0.5
     assert "poor_calibration" not in q["flags"]
+
+
+def test_drift_checks_rescue_gain_under_posture_drift():
+    """Reproduces the real-recording problem: the eye-signal scale shrank ~20%
+    while the head tilted ~12 deg. eye_v1 under-reads saccade gain; eye_v2's
+    drift checks recover it."""
+    from eyetrack.stimulus import eye_v1, eye_v2
+
+    def gain(proto):
+        vals = []
+        for s in (1, 2, 3):
+            rec, stim, _ = simulate(fps=30, noise_deg=0.5, seed=s, protocol=proto(seed=s),
+                                    scale_drift=-0.2, offset_drift_deg=3.0, pitch_drift_deg=12)
+            c = calibration.fit(rec, stim); calibration.apply(rec, c)
+            ms, q = features.compute(rec, stim)
+            vals.append({m["name"]: m for m in ms})
+        return vals
+
+    v1 = gain(eye_v1)
+    v2 = gain(eye_v2)
+    g1 = np.mean([d["saccade_gain_median"]["value"] for d in v1])
+    g2 = np.mean([d["saccade_gain_median"]["value"] for d in v2])
+    assert g1 < 0.88                       # biased low without drift checks
+    assert g2 == pytest.approx(0.95, abs=0.04)
+    drift = v2[0]["calibration_scale_drift_max"]
+    assert drift["value"] < -0.08 and drift["metadata"]["n_used"] == 3
+
+
+def test_posture_guard_warns_after_drift_and_resets_at_drift_check():
+    from eyetrack.live import PostureGuard
+    g = PostureGuard(threshold_deg=4.0)
+    t = 0.0
+    for _ in range(60):                        # calibration at pitch 8
+        t += 1 / 30; g.update(t, "calibration", 0.0, 8.0)
+    for i in range(300):                       # task: head tilts back to 18 deg
+        t += 1 / 30; g.update(t, "prosaccade", 0.0, 8.0 + 10 * i / 300)
+    assert g.warning and g.deviation > 4
+    for _ in range(45):                        # drift check at the new pose = new reference
+        t += 1 / 30; g.update(t, "drift_check", 0.0, 18.0)
+    assert not g.warning
+    for _ in range(30):
+        t += 1 / 30; g.update(t, "pursuit", 0.0, 18.5)
+    assert not g.warning

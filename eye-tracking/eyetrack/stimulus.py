@@ -11,6 +11,11 @@ Protocol "eye_v1" (~100 s):
   pursuit      dot moves sinusoidally, 0.4 Hz, 15 s  -> pursuit gain, lag, catch-up saccades
 Blinks are measured throughout.
 
+Protocol "eye_v2" (~115 s, the default) = eye_v1 + three 5-second DRIFT CHECKS
+(centre, left, right) before the prosaccade task, halfway through it, and
+before pursuit. Webcam eye tracking drifts as people shift posture; each task
+is then scored with the calibration measured just before it.
+
 Positions are in degrees of visual angle, converted to screen pixels from
 the viewing distance and physical screen width you supply.
 """
@@ -123,7 +128,8 @@ class ScreenGeometry:
                 math.degrees(math.atan(half_h / self.distance_cm)))
 
 
-def render(geom: ScreenGeometry, x_deg: float | None, y_deg: float | None, text: str = "") -> np.ndarray:
+def render(geom: ScreenGeometry, x_deg: float | None, y_deg: float | None, text: str = "",
+           text_color: tuple[int, int, int] = (160, 160, 160)) -> np.ndarray:
     import cv2
 
     img = np.zeros((geom.height_px, geom.width_px, 3), np.uint8)
@@ -133,5 +139,27 @@ def render(geom: ScreenGeometry, x_deg: float | None, y_deg: float | None, text:
         cv2.circle(img, (x, y), r, (255, 255, 255), -1)
         cv2.circle(img, (x, y), max(2, r // 4), (0, 0, 0), -1)  # centre mark helps precise fixation
     if text:
-        cv2.putText(img, text, (30, geom.height_px - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (160, 160, 160), 2)
+        cv2.putText(img, text, (30, geom.height_px - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, text_color, 2)
     return img
+
+
+def _drift_check(amp_x: float) -> Segment:
+    pts = [(0.0, 0.0), (-amp_x, 0.0), (amp_x, 0.0)]
+    return Segment("drift_check", 1.6 * len(pts), [(1.6 * i, x, y) for i, (x, y) in enumerate(pts)])
+
+
+def eye_v2(amp_x: float = 10.0, amp_y: float = 7.0, n_trials: int = 20, seed: int = 0) -> Protocol:
+    v1 = eye_v1(amp_x, amp_y, n_trials, seed)
+    calibration, fixation, prosaccade, pursuit = v1.segments
+    # Split the prosaccade trials in two halves with a drift check between them.
+    half = n_trials // 2
+    steps = prosaccade.steps
+    cut_t = steps[2 * half][0]           # start time of trial `half`
+    first = Segment("prosaccade", cut_t, steps[:2 * half])
+    second = Segment("prosaccade", prosaccade.duration - cut_t,
+                     [(ts - cut_t, x, y) for ts, x, y in steps[2 * half:]])
+    return Protocol("eye_v2", [calibration, fixation, _drift_check(amp_x), first,
+                               _drift_check(amp_x), second, _drift_check(amp_x), pursuit])
+
+
+PROTOCOLS = {"eye_v1": eye_v1, "eye_v2": eye_v2}

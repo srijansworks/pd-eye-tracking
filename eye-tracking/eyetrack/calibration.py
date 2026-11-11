@@ -50,15 +50,69 @@ def fit(rec: Recording, events: list[dict]) -> dict | None:
     err = np.hypot(pred[:, 0] - X, pred[:, 1] - Y)
     # Per-axis error matters: webcam vertical tracking is much worse than
     # horizontal (eyelids), and the timed tasks only use the horizontal axis.
-    return {"method": "affine_v1", "coef_x": cx.tolist(), "coef_y": cy.tolist(),
-            "n_points": len(H), "rmse_deg": float(np.sqrt(np.mean(err ** 2))),
-            "rmse_x_deg": float(np.sqrt(np.mean((pred[:, 0] - X) ** 2))),
-            "rmse_y_deg": float(np.sqrt(np.mean((pred[:, 1] - Y) ** 2)))}
+    cal = {"method": "affine_v1", "coef_x": cx.tolist(), "coef_y": cy.tolist(),
+           "n_points": len(H), "rmse_deg": float(np.sqrt(np.mean(err ** 2))),
+           "rmse_x_deg": float(np.sqrt(np.mean((pred[:, 0] - X) ** 2))),
+           "rmse_y_deg": float(np.sqrt(np.mean((pred[:, 1] - Y) ** 2)))}
+    cal["drift_checks"] = _fit_drift_checks(rec, events, usable, cx)
+    return cal
+
+
+def _fit_drift_checks(rec: Recording, events: list[dict], usable: np.ndarray, cx: np.ndarray) -> list[dict]:
+    """Re-fit the HORIZONTAL mapping at each drift check (protocol eye_v2).
+
+    A drift check shows 3 dots (centre, left, right). With only horizontal
+    dots we refit the offset and scale (gx = a + b*h + c*v) and keep the
+    vertical-crosstalk term c from the full calibration. Webcam posture drift
+    changes mostly the offset and scale, so this is what needs refreshing.
+    """
+    steps = [e for e in events if e["task"] == "drift_check" and e["kind"] == "target_step"]
+    if not steps:
+        return []
+    blocks, cur = [], [steps[0]]
+    for e in steps[1:]:
+        if e["t"] - cur[-1]["t"] < 2.5:   # dots 1.6 s apart = same block
+            cur.append(e)
+        else:
+            blocks.append(cur)
+            cur = [e]
+    blocks.append(cur)
+
+    t, h, v = rec["t"], rec["h"], rec["v"]
+    out = []
+    for blk in blocks:
+        Hs, Vs, Xs = [], [], []
+        for i, e in enumerate(blk):
+            t_end = blk[i + 1]["t"] if i + 1 < len(blk) else e["t"] + 1.6
+            m = usable & (t >= e["t"] + SETTLE_S) & (t < t_end)
+            if m.sum() >= 3:
+                Hs.append(np.median(h[m])); Vs.append(np.median(v[m])); Xs.append(e["x_deg"])
+        rec_ = {"t_start": float(blk[0]["t"]), "n_points": len(Hs), "used": False}
+        if len(Hs) >= 3 and len(set(Xs)) >= 2:
+            Hs, Vs, Xs = map(np.array, (Hs, Vs, Xs))
+            M = np.column_stack([np.ones(len(Hs)), Hs])
+            (a, b), *_ = np.linalg.lstsq(M, Xs - cx[2] * Vs, rcond=None)
+            rmse = float(np.sqrt(np.mean((M @ [a, b] + cx[2] * Vs - Xs) ** 2)))
+            rec_.update({"coef_x": [float(a), float(b), float(cx[2])], "rmse_x_deg": rmse,
+                         # Reported as change in eye-SIGNAL size: -0.2 = the same dot
+                         # now moves the iris 20% less than at calibration.
+                         "scale_change": float(cx[1] / b - 1) if b else None})
+            # Use it only if it fits well and the scale is sane (guards against a
+            # drift check where the person blinked or looked away).
+            rec_["used"] = bool(rmse < 2.0 and b and cx[1] and abs(cx[1] / b - 1) < 0.5)
+        out.append(rec_)
+    return out
 
 
 def apply(rec: Recording, cal: dict) -> None:
     cx, cy = np.array(cal["coef_x"]), np.array(cal["coef_y"])
     A = np.column_stack([np.ones(len(rec)), rec["h"], rec["v"]])
-    rec.data["gx"] = A @ cx
+    gx = A @ cx
+    # Piecewise: from each accepted drift check onwards, use its horizontal mapping.
+    for d in cal.get("drift_checks", []):
+        if d.get("used"):
+            m = rec["t"] >= d["t_start"]
+            gx[m] = A[m] @ np.array(d["coef_x"])
+    rec.data["gx"] = gx
     rec.data["gy"] = A @ cy
     rec.meta["calibration"] = cal
