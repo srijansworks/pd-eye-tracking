@@ -31,14 +31,27 @@ Eye corners move with the head, not the eyeball, so this cancels head translatio
 camera and head roll (unit-tested in `test_eye_in_head_*`). It does **not** cancel large head
 turns, so the protocol asks for a still head and flags `head_movement`.
 
-## Protocol `eye_v1` (~100 s)
+## Protocol `eye_v2` (~111 s, default)
 | Segment | What the dot does | Measurements |
 |---|---|---|
-| calibration (12 s) | centre, ±10° horizontal, ±7° vertical, centre | calibration map + `calibration_rmse` |
+| calibration (12 s) | centre, ±10° horizontal, ±7° vertical, centre | calibration map, `calibration_rmse` / `_x` / `_y` |
 | fixation (15 s) | stays at centre | `fixation_bcea_68`, `fixation_sd_x/y`, `intrusive_saccade_rate`, `square_wave_jerk_rate` |
-| prosaccade (~55 s, 20 trials) | centre → random ±10° after a random 1–2 s wait | `saccade_latency_median/sd`, `saccade_gain_median`, `saccade_amplitude_median`, `saccade_peak_velocity_median`, `saccade_direction_error_rate` |
-| pursuit (15 s) | 0.4 Hz sinusoid, ±10° | `pursuit_velocity_gain`, `pursuit_phase_lag`, `pursuit_catchup_saccade_rate` |
+| **drift check** (4.8 s) | centre, left, right | re-fits horizontal offset + scale → `calibration_scale_drift_max` |
+| prosaccade, trials 1–10 | centre → random ±10° after a random 1–2 s wait | `saccade_latency_median/sd`, `saccade_gain_median`, `saccade_amplitude_median`, `saccade_peak_velocity_median`, `saccade_direction_error_rate` |
+| **drift check** (4.8 s) | centre, left, right | |
+| prosaccade, trials 11–20 | same | |
+| **drift check** (4.8 s) | centre, left, right | |
+| pursuit (15 s) | 0.4 Hz sinusoid, ±10° | `pursuit_velocity_gain`, `pursuit_position_gain`, `pursuit_phase_lag`, `pursuit_catchup_saccade_rate` |
 | whole recording | — | `blink_rate`, `blink_duration_mean`, `valid_frame_fraction`, `effective_fps`, `iris_diameter_px` |
+
+**Why drift checks:** people slowly change posture during a test. In our first real recordings the head
+tilted back 7–14° over 90 s and the eye-signal scale changed by up to 19%, which biased saccade gain low
+(0.84 → 0.72 across sessions). Each task is now scored with the calibration taken just before it. In the
+synthetic test with the same drift, saccade gain reads 0.83 without drift checks and 0.95 with them (truth 0.95).
+A **live posture warning** also appears on screen if the head moves > 4° from its pose at the last
+calibration, and the moment is logged as a `posture_warning_start` event.
+
+The original `eye_v1` protocol (no drift checks) is kept for comparison.
 
 Stimulus onset times are logged when each frame **reaches the screen**, not when it was scheduled.
 
@@ -49,13 +62,13 @@ compares the measured values with the true ones (`docs/benchmark_output.txt`):
 
 | measured / true | webcam 30 fps | webcam 60 fps | IR 120 fps | IR 250 fps | lab 500 fps |
 |---|---|---|---|---|---|
-| saccade latency (ms) | 199 / 197 | 202 / 197 | 197 / 197 | 202 / 197 | 204 / 197 |
-| **saccade peak velocity (°/s)** | **143 / 425** | 260 / 425 | 307 / 425 | 391 / 425 | 421 / 425 |
-| saccade gain | 0.93 / 0.95 | 0.95 / 0.95 | 0.95 / 0.95 | 0.95 / 0.95 | 0.95 / 0.95 |
-| pursuit gain | 0.90 / 0.85 | 0.92 / 0.85 | 0.84 / 0.85 | 0.85 / 0.85 | 0.85 / 0.85 |
-| pursuit phase lag (ms) | 31 / 60 | 35 / 60 | 59 / 60 | 59 / 60 | 60 / 60 |
-| blink duration (ms) | 148 / 150 | 150 / 150 | 149 / 150 | 150 / 150 | 150 / 150 |
-| **square-wave jerks (/min)** | **0 / 28** | 0 / 28 | 22 / 28 | 18 / 28 | 20 / 28 |
+| saccade latency (ms) | 195 / 194 | 202 / 194 | 193 / 194 | 198 / 194 | 197 / 194 |
+| **saccade peak velocity (°/s)** | **145 / 425** | 262 / 425 | 308 / 425 | 387 / 425 | 422 / 425 |
+| saccade gain | 0.98 / 0.95 | 0.96 / 0.95 | 0.95 / 0.95 | 0.95 / 0.95 | 0.95 / 0.95 |
+| pursuit velocity gain | 0.90 / 0.85 | 0.91 / 0.85 | 0.84 / 0.85 | 0.85 / 0.85 | 0.85 / 0.85 |
+| pursuit phase lag (ms) | 29 / 60 | 36 / 60 | 59 / 60 | 59 / 60 | 59 / 60 |
+| blink duration (ms) | 152 / 150 | 150 / 150 | 150 / 150 | 149 / 150 | 150 / 150 |
+| **square-wave jerks (/min)** | **0 / 28** | 0 / 28 | 22 / 28 | 19 / 28 | 20 / 28 |
 
 How to read this:
 * A 30 fps webcam is fine for **latency (median), saccade gain, pursuit gain, blinks**.
@@ -65,6 +78,29 @@ How to read this:
 * This is the **best case**: synthetic data lacks MediaPipe's own temporal smoothing, camera
   latency, lighting changes and head motion. Real accuracy has to be checked against a reference
   tracker or a test with known stimuli.
+
+## First real recordings (Srijan, laptop webcam, 2026-11-11, protocol eye_v1)
+Not clinical values; one healthy person, three runs on the same day.
+
+| | Rec 1 | Rec 2 | Rec 3 |
+|---|---|---|---|
+| valid frames / fps / iris size | 100% / 29.5 / 32 px | 100% / 29.4 / 30 px | 100% / 29.4 / 34 px |
+| calibration error x / y (°) | 0.65 / 1.44 | 0.91 / 2.85 | 0.83 / 0.57 |
+| head pitch change over the run | +7° | +14° | +11° |
+| saccade latency (median) | 229 ms | 234 ms | 245 ms |
+| saccade gain | 0.84 | 0.79 | 0.72 |
+| pursuit position gain | 0.93 | 0.78 | 0.70 |
+| blinks detected | 0 | 6 | 4 |
+
+What we learned and fixed:
+* **Latency repeats** within ~15 ms; **gains drifted** with posture → drift checks + posture warning (eye_v2).
+* The **vertical** channel is much worse than horizontal on a webcam → timed tasks use horizontal only;
+  calibration error is reported per axis.
+* Low pursuit *velocity* gain with good *position* gain = catch-up-saccade-driven ("saccadic") pursuit →
+  added `pursuit_position_gain`.
+* Blinks are detectable (EAR dips to ~0.2 of baseline); zero blinks in recording 1 was real blink suppression
+  during a demanding visual task (`check-camera` now includes a blink self-test).
+* A head-mounted camera (the hardware team's glasses) removes the posture problem at its source.
 
 ## Known limitations (be honest about these in the Conrad write-up)
 1. **No pupil diameter** with an RGB webcam. Needs IR (phase 2).

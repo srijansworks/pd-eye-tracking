@@ -24,15 +24,14 @@ Webcam ─▶ eye-tracking/ (Python: MediaPipe iris tracking → eye-movement ev
 
 ## Status
 **Implemented and tested**
-- Webcam pipeline with a stimulus protocol (calibration, fixation, prosaccades, pursuit) → 21 measurements with confidence and quality flags → JSON/CSV/plot.
+- Webcam pipeline with a stimulus protocol (calibration, fixation, prosaccades, pursuit, drift checks + live posture warning) → 25 measurements with confidence and quality flags → JSON/CSV/plot.
 - Synthetic ground-truth benchmark showing what each camera frame rate can measure.
 - Supabase schema for studies, participants, sessions, multi-device recordings, measurements, events, predictions and reports, with RLS, consent-gated raw media and device-key ingest.
 - Next.js API (sessions, ingest, summaries, history, export, predictions) and dashboard pages.
-- Tests: Python 18 passed; web 21 passed (migrations + RLS + real route handlers against real SQL in PGlite); `next build` and `tsc` clean.
+- Tests: Python 24 passed (incl. a headless run of the live recording loop); web 21 passed (migrations + RLS + real route handlers against real SQL in PGlite); `next build` and `tsc` clean.
 
 **Not yet done / not verified**
-- Not yet run on a real face: the live `check-camera` / `record` commands need a person at the camera and have only been import-checked.
-- Not yet run against a real Supabase instance (no Docker/Supabase CLI on the dev machine). The SQL is tested in PGlite, and the Supabase-specific pieces (auth, storage) are stubbed in tests.
+- Run on a real face 3 times (protocol eye_v1) and end-to-end on local Supabase (Docker) → dashboard. The new eye_v2 protocol has not yet been run on a real face.
 - Pupil diameter (needs an IR camera), antisaccade task, rate limiting, CI.
 
 ## Quick start

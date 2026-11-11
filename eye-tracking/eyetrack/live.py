@@ -17,7 +17,7 @@ import numpy as np
 from .camera import Camera
 from .landmarks import EyeLandmarker, draw_overlay
 from .recording import Recording
-from .stimulus import ScreenGeometry, eye_v1, render
+from .stimulus import ScreenGeometry, eye_v2, render
 
 WIN = "eyetrack"
 
@@ -30,6 +30,40 @@ def _row(tf: float, ef, task: str, target: tuple[float, float] | None) -> dict:
         "brightness": ef.brightness, "task": task,
         "target_x": target[0] if target else np.nan, "target_y": target[1] if target else np.nan,
     }
+
+
+class PostureGuard:
+    """Warns when the head drifts away from the pose it had at the most recent
+    calibration / drift check. Calibration is only valid for that pose, so the
+    participant is asked to move back. Pure logic (no camera) so it's testable."""
+
+    REF_TASKS = ("calibration", "drift_check")
+
+    def __init__(self, threshold_deg: float = 4.0, window_s: float = 0.5):
+        self.threshold, self.window = threshold_deg, window_s
+        self.ref_samples: list[tuple[float, float]] = []
+        self.ref: tuple[float, float] | None = None
+        self.recent: list[tuple[float, float, float]] = []
+        self.prev_task = None
+        self.warning = False
+        self.deviation = 0.0
+
+    def update(self, t: float, task: str, yaw: float, pitch: float) -> bool:
+        if not (np.isfinite(yaw) and np.isfinite(pitch)):
+            return self.warning
+        if task in self.REF_TASKS:
+            if self.prev_task not in self.REF_TASKS:
+                self.ref_samples = []           # a new calibration block starts a new reference
+            self.ref_samples.append((yaw, pitch))
+            self.ref = tuple(np.median(np.array(self.ref_samples), axis=0))
+            self.warning = False
+        elif self.ref is not None:
+            self.recent = [r for r in self.recent if t - r[0] <= self.window] + [(t, yaw, pitch)]
+            y, p_ = np.median([r[1] for r in self.recent]), np.median([r[2] for r in self.recent])
+            self.deviation = float(max(abs(y - self.ref[0]), abs(p_ - self.ref[1])))
+            self.warning = self.deviation > self.threshold
+        self.prev_task = task
+        return self.warning
 
 
 def check_camera(index: int = 0, seconds: float = 10.0, show: bool = True) -> dict:
@@ -121,7 +155,7 @@ def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
         w, h = 1440, 900
     geom = ScreenGeometry(w, h, screen_width_cm, distance_cm)
     mx, my = geom.max_deg()
-    proto = eye_v1(amp_x=min(10.0, mx - 2), amp_y=min(7.0, my - 2), seed=seed)
+    proto = eye_v2(amp_x=min(10.0, mx - 2), amp_y=min(7.0, my - 2), seed=seed)
 
     writer = None
     rows: list[dict] = []
@@ -162,13 +196,15 @@ def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
         t_start = time.monotonic()
         started_utc = datetime.now(timezone.utc)
         shown = None
+        guard = PostureGuard()
         while True:
             now = time.monotonic() - t_start
             seg, tl = proto.at(now)
             if seg is None:
                 break
             tx, ty = seg.target(tl)
-            cv2.imshow(WIN, render(geom, tx, ty))
+            msg = ("Head moved - please return to your starting position" if guard.warning else "")
+            cv2.imshow(WIN, render(geom, tx, ty, msg, text_color=(0, 200, 255)))
             if (cv2.waitKey(1) & 0xFF) == 27:
                 raise KeyboardInterrupt
             t_disp = time.monotonic() - t_start
@@ -190,6 +226,11 @@ def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
                 ef = lm.process(fr.image, fr.t)
                 fseg, ftl = proto.at(tf)
                 rows.append(_row(tf, ef, fseg.task if fseg else "", fseg.target(ftl) if fseg else None))
+                was = guard.warning
+                if ef.ok and guard.update(tf, fseg.task if fseg else "", ef.yaw, ef.pitch) != was:
+                    stim_events.append({"t": tf, "task": fseg.task if fseg else "",
+                                        "kind": "posture_warning_start" if guard.warning else "posture_warning_end",
+                                        "deviation_deg": round(guard.deviation, 2)})
                 if writer is not None:
                     writer.write(fr.image)
     finally:

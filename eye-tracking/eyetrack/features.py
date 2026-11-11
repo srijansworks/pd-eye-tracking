@@ -111,13 +111,32 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
     # head pose it was fitted in. Flag tasks where the head turned/tilted > 3 deg.
     task_flags: dict[str, list[str]] = {}
     task_conf: dict[str, float] = {}
-    cm = rec.task_mask("calibration") & (rec["frame_ok"] == 1)
+    okf = rec["frame_ok"] == 1
+    tasks_arr = rec["task"]
     q["head_drift_deg"] = {}
     for task in ("fixation", "prosaccade", "pursuit"):
-        tm = rec.task_mask(task) & (rec["frame_ok"] == 1)
+        tm = rec.task_mask(task) & okf
         task_flags[task], task_conf[task] = [], 1.0
-        if cm.sum() > 10 and tm.sum() > 10:
-            drift = max(abs(np.nanmedian(rec[a][tm]) - np.nanmedian(rec[a][cm])) for a in ("yaw", "pitch"))
+        if tm.sum() <= 10:
+            continue
+        # Reference pose = the calibration/drift-check block right before each
+        # stretch of this task (eye_v2 recalibrates before every task).
+        drifts = []
+        idx = np.where(rec.task_mask(task))[0]
+        runs = np.split(idx, np.where(np.diff(idx) > 1)[0] + 1)
+        for run in runs:
+            prev = np.where((np.arange(len(rec)) < run[0]) & okf &
+                            np.isin(tasks_arr, ["calibration", "drift_check"]))[0]
+            if len(prev) < 10:
+                continue
+            # last contiguous calibration/drift-check block before this run
+            blk = np.split(prev, np.where(np.diff(prev) > 1)[0] + 1)[-1]
+            rm = np.zeros(len(rec), bool); rm[run] = True; rm &= okf
+            if rm.sum() > 10:
+                drifts.append(max(abs(np.nanmedian(rec[a][rm]) - np.nanmedian(rec[a][blk]))
+                                  for a in ("yaw", "pitch")))
+        if drifts:
+            drift = max(drifts)
             q["head_drift_deg"][task] = round(float(drift), 2)
             if drift > 3.0:
                 task_flags[task], task_conf[task] = ["head_moved_since_calibration"], 0.6
@@ -283,6 +302,13 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
         out.append(_m("calibration_rmse", q["calibration_rmse_deg"], "deg", "calibration", 1.0))
         out.append(_m("calibration_rmse_x", q["calibration_rmse_x_deg"], "deg", "calibration", 1.0))
         out.append(_m("calibration_rmse_y", q["calibration_rmse_y_deg"], "deg", "calibration", 1.0))
+        dcs = [d for d in rec.meta["calibration"].get("drift_checks", []) if d.get("scale_change") is not None]
+        if dcs:
+            # How much the eye-signal scale moved during the session. Large values =
+            # posture drift that WOULD have biased gains without the drift checks.
+            worst = max(dcs, key=lambda d: abs(d["scale_change"]))
+            out.append(_m("calibration_scale_drift_max", worst["scale_change"], "ratio", "drift_check", 1.0,
+                          n_checks=len(dcs), n_used=sum(1 for d in dcs if d.get("used"))))
 
     for m in out:
         if task_flags.get(m["task"]):
