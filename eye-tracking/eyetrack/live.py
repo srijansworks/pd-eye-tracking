@@ -29,6 +29,7 @@ def _row(tf: float, ef, task: str, target: tuple[float, float] | None) -> dict:
         "iris_px": ef.iris_px, "yaw": ef.yaw, "pitch": ef.pitch, "roll": ef.roll,
         "brightness": ef.brightness, "task": task,
         "target_x": target[0] if target else np.nan, "target_y": target[1] if target else np.nan,
+        "pupil_px": ef.pupil_px, "pupil_conf": ef.pupil_conf,
     }
 
 
@@ -66,10 +67,18 @@ class PostureGuard:
         return self.warning
 
 
-def check_camera(index: int = 0, seconds: float = 10.0, show: bool = True) -> dict:
+def make_tracker(camera_type: str = "webcam"):
+    """'webcam' = MediaPipe face/iris landmarks; 'ir' = near-eye infrared pupil tracker (glasses)."""
+    if camera_type == "ir":
+        from .nearir.tracker import NearIRTracker
+        return NearIRTracker()
+    return EyeLandmarker()
+
+
+def check_camera(index: int = 0, seconds: float = 10.0, show: bool = True, camera_type: str = "webcam") -> dict:
     """Run face/iris tracking for a few seconds and report whether the setup is usable."""
     cam = Camera(index).start()
-    lm = EyeLandmarker()
+    lm = make_tracker(camera_type)
     rows, t_start = [], time.monotonic()
     try:
         while time.monotonic() - t_start < seconds:
@@ -141,11 +150,11 @@ def check_camera(index: int = 0, seconds: float = 10.0, show: bool = True) -> di
 
 def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
            distance_cm: float = 55.0, seed: int = 0, save_video: bool = False,
-           participant_label: str = "") -> Recording:
+           participant_label: str = "", camera_type: str = "webcam", mm_per_px: float | None = None) -> Recording:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     cam = Camera(index).start()
-    lm = EyeLandmarker()
+    lm = make_tracker(camera_type)
 
     cv2.namedWindow(WIN, cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty(WIN, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
@@ -245,7 +254,8 @@ def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
         "started_at_utc": started_utc.isoformat().replace("+00:00", "Z"),
         "camera": {**info, "index": index}, "dropped_frames": dropped,
         "screen": {"width_px": w, "height_px": h, "width_cm": screen_width_cm, "distance_cm": distance_cm},
-        "illumination": "visible", "participant_label": participant_label,
+        "illumination": "infrared_850nm" if camera_type == "ir" else "visible",
+        "camera_type": camera_type, "mm_per_px": mm_per_px, "participant_label": participant_label,
         "raw_video_saved": bool(save_video), "stimulus_events": stim_events, "is_synthetic": False,
     }
     rec = Recording.from_rows(rows, meta)
@@ -253,17 +263,18 @@ def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
     return rec
 
 
-def process_video(path: str, out_dir: str | Path) -> Recording:
+def process_video(path: str, out_dir: str | Path, camera_type: str = "webcam",
+                  mm_per_px: float | None = None) -> Recording:
     """Run the tracker on an existing video file (no stimulus → uncalibrated)."""
     from .camera import video_frames
 
-    lm = EyeLandmarker()
+    lm = make_tracker(camera_type)
     rows = []
     for fr in video_frames(path):
         ef = lm.process(fr.image, fr.t)
         rows.append(_row(fr.t, ef, "video", None))
     lm.close()
-    rec = Recording.from_rows(rows, {"source": "video", "video_file": Path(path).name,
-                                     "stimulus_events": [], "is_synthetic": False})
+    rec = Recording.from_rows(rows, {"source": "video", "video_file": Path(path).name, "camera_type": camera_type,
+                                     "mm_per_px": mm_per_px, "stimulus_events": [], "is_synthetic": False})
     rec.save(out_dir)
     return rec

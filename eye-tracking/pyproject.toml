@@ -26,3 +26,4 @@ packages = ["eyetrack"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["slow: end-to-end simulations taking ~30 s"]
