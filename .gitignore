@@ -21,3 +21,4 @@ web/next-env.d.ts
 .DS_Store
 *.egg-info/
 supabase/.temp/
+data/
