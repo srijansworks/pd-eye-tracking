@@ -48,7 +48,7 @@ bash scripts/download_model.sh
 # Backend (needs Docker + Supabase CLI for the live stack; tests don't)
 cd web && npm install && npm test
 ```
-Full backend setup: [docs/BACKEND.md](docs/BACKEND.md#run-locally). Contributing: [CONTRIBUTING.md](CONTRIBUTING.md).
+Full backend setup: [docs/BACKEND.md](docs/BACKEND.md#run-locally). Shared team database: [docs/HOSTED_SUPABASE.md](docs/HOSTED_SUPABASE.md). Contributing: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Environment variables
 | Where | Variable | Notes |
