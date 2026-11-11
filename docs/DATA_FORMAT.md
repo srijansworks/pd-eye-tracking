@@ -61,8 +61,8 @@ Eye (implemented): `blink_rate`, `blink_duration_mean`, `fixation_bcea_68`, `fix
 `fixation_sd_y`, `intrusive_saccade_rate`, `square_wave_jerk_rate`, `fixation_duration_mean`,
 `saccade_latency_median`, `saccade_latency_sd`, `saccade_amplitude_median`,
 `saccade_peak_velocity_median`, `saccade_gain_median`, `saccade_direction_error_rate`,
-`pursuit_velocity_gain`, `pursuit_phase_lag`, `pursuit_catchup_saccade_rate`,
-`valid_frame_fraction`, `effective_fps`, `iris_diameter_px`, `calibration_rmse`.
+`pursuit_velocity_gain`, `pursuit_position_gain`, `pursuit_phase_lag`, `pursuit_catchup_saccade_rate`,
+`valid_frame_fraction`, `effective_fps`, `iris_diameter_px`, `calibration_rmse`, `calibration_rmse_x`, `calibration_rmse_y`.
 
 Wrist / gait: add your names here in a pull request **before** you start uploading, so the
 dashboard and future models agree on meaning and units. Examples: `tremor_peak_frequency`,

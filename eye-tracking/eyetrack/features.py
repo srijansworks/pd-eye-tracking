@@ -62,9 +62,16 @@ def quality_summary(rec: Recording) -> dict:
     if max(q["head_yaw_sd_deg"], q["head_pitch_sd_deg"]) > 3:
         flags.append("head_movement")             # calibration assumes a still head
     if "calibration" in rec.meta:
-        q["calibration_rmse_deg"] = rec.meta["calibration"]["rmse_deg"]
-        if q["calibration_rmse_deg"] > 2.0:
+        c = rec.meta["calibration"]
+        q["calibration_rmse_deg"] = c["rmse_deg"]
+        q["calibration_rmse_x_deg"] = c.get("rmse_x_deg", c["rmse_deg"])
+        q["calibration_rmse_y_deg"] = c.get("rmse_y_deg", c["rmse_deg"])
+        # The timed tasks are horizontal, so "poor_calibration" is judged on the
+        # horizontal axis; a bad vertical axis only affects vertical measures.
+        if q["calibration_rmse_x_deg"] > 1.5:
             flags.append("poor_calibration")
+        if q["calibration_rmse_y_deg"] > 2.0:
+            flags.append("poor_vertical_calibration")
     else:
         flags.append("uncalibrated")
     q["flags"] = flags
@@ -249,6 +256,16 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
                           base_flags + timing_flags, freq_hz=f,
                           note="Below ~120 fps small catch-up saccades go undetected and bias "
                                "lag low / gain high (synthetic benchmark: 60 ms true -> ~30 ms at 30 fps)."))
+        # Position gain: how much of the target's swing the eye covers, by ANY means
+        # (smooth tracking + catch-up saccades). Sturdier at 30 fps than velocity
+        # gain; a low velocity gain with a normal position gain = "saccadic pursuit".
+        pp = usable & pm & (t >= e["t"] + 1.0)
+        if cal and pp.sum() > 30:
+            tt = t[pp] - e["t"]
+            M = np.column_stack([np.sin(w * tt), np.cos(w * tt), np.ones_like(tt)])
+            (a2, b2, _c2), *_ = np.linalg.lstsq(M, x[pp], rcond=None)
+            out.append(_m("pursuit_position_gain", math.hypot(a2, b2) / A, "ratio", "pursuit",
+                          pp.sum() / pm.sum(), base_flags, freq_hz=f, amplitude_deg=A))
         pur_sacc = [s for s in sacc if pm[s.i_start]]
         pdur = pm.sum() / fps if fps > 0 else 0
         if pdur > 3:
@@ -264,6 +281,8 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
         out.append(_m("iris_diameter_px", q["iris_diameter_px_median"], "px", "all", 1.0))
     if "calibration_rmse_deg" in q:
         out.append(_m("calibration_rmse", q["calibration_rmse_deg"], "deg", "calibration", 1.0))
+        out.append(_m("calibration_rmse_x", q["calibration_rmse_x_deg"], "deg", "calibration", 1.0))
+        out.append(_m("calibration_rmse_y", q["calibration_rmse_y_deg"], "deg", "calibration", 1.0))
 
     for m in out:
         if task_flags.get(m["task"]):
@@ -271,6 +290,8 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
             m["confidence"] = round(m["confidence"] * task_conf[m["task"]], 3)
         if m["name"] == "fixation_sd_y":
             m["quality_flags"] = sorted(set(m["quality_flags"]) | {"vertical_less_reliable"})
+        if m["name"] in ("fixation_sd_y", "fixation_bcea_68") and "poor_vertical_calibration" in q["flags"]:
+            m["quality_flags"] = sorted(set(m["quality_flags"]) | {"poor_vertical_calibration"})
 
     q["unavailable"] = {
         "pupil_diameter": "Needs infrared imaging; RGB webcam cannot separate pupil from iris.",
