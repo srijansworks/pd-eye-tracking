@@ -1,0 +1,152 @@
+<title>Week 1 Software Report</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: single reading column like a lab notebook entry; tables scroll inside their own box. */
+:root {
+  --bg: #f6f8f8; --surface: #ffffff; --fg: #17201f; --muted: #5a6866; --line: #d9e2e0;
+  --accent: #0f7a6c; --accent-soft: #e2f1ee; --ok: #1f7a3a; --warn: #9a6200; --bad: #b3261e;
+  --ok-bg: #e5f4e8; --warn-bg: #fbf0dc; --bad-bg: #fbe5e3;
+  --display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #101615; --surface: #172020; --fg: #e3ecea; --muted: #9aaaa7; --line: #2a3735;
+  --accent: #5cc8b6; --accent-soft: #173431; --ok: #7fd394; --warn: #e8b45a; --bad: #f08a80;
+  --ok-bg: #18301f; --warn-bg: #33280f; --bad-bg: #3a1a17; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #101615; --surface: #172020; --fg: #e3ecea; --muted: #9aaaa7; --line: #2a3735;
+  --accent: #5cc8b6; --accent-soft: #173431; --ok: #7fd394; --warn: #e8b45a; --bad: #f08a80;
+  --ok-bg: #18301f; --warn-bg: #33280f; --bad-bg: #3a1a17; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 15px/1.6 var(--body); }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 36px; }
+header { display: grid; gap: 8px; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font: 600 clamp(28px, 5vw, 38px)/1.15 var(--display); margin: 0; text-wrap: balance; }
+h2 { font: 600 21px/1.3 var(--display); margin: 0 0 12px; text-wrap: balance; }
+h3 { font: 600 15px/1.4 var(--body); margin: 18px 0 6px; }
+p { margin: 0 0 10px; max-width: 68ch; }
+.muted { color: var(--muted); }
+.lede { font-size: 17px; max-width: 64ch; }
+.disclaimer { border-left: 3px solid var(--warn); background: var(--warn-bg); padding: 10px 14px; border-radius: 4px; font-size: 14px; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font: 500 12px/1.3 var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; font-family: var(--mono); white-space: nowrap; }
+.pill { display: inline-block; font: 500 12px/1 var(--mono); padding: 4px 8px; border-radius: 999px; white-space: nowrap; }
+.ok { background: var(--ok-bg); color: var(--ok); } .warn { background: var(--warn-bg); color: var(--warn); } .bad { background: var(--bad-bg); color: var(--bad); }
+code { font: 13px var(--mono); background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+pre { font: 13px/1.5 var(--mono); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 0; }
+.flow { font: 13px/1.7 var(--mono); }
+ul { margin: 0; padding-left: 20px; } li { margin: 4px 0; max-width: 68ch; }
+a { color: var(--accent); }
+.callout { background: var(--accent-soft); border-radius: 8px; padding: 14px 16px; }
+.callout h3 { margin-top: 0; }
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Conrad Challenge · Software team · Week 1</span>
+  <h1>Week 1 Software Report</h1>
+  <p class="lede">Status of Srijan's software deliverables: the eye-tracking pipeline, the shared backend, public datasets, and a literature starting list.</p>
+  <p class="disclaimer">Research prototype. Nothing here is clinically validated, and no number on this page says anything about Parkinson's disease. All test data is synthetic or from one healthy team member.</p>
+</header>
+
+<section>
+  <h2>Deliverables from the Week 1 agenda</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Deliverable</th><th>Status</th><th>Where</th></tr></thead>
+    <tbody>
+      <tr><td>Set up Supabase and Next.js</td><td><span class="pill ok">Done, running</span></td><td>Local Supabase (Docker) + Next.js dashboard; tested end to end</td></tr>
+      <tr><td>Find usable public datasets (wrist first, eye if possible)</td><td><span class="pill ok">Done</span></td><td><code>docs/DATASETS.md</code></td></tr>
+      <tr><td>Literature review (eye movements, wrist data)</td><td><span class="pill warn">Shortlist ready, reading in progress</span></td><td><code>docs/LITERATURE_SHORTLIST.md</code></td></tr>
+      <tr><td>Eye-tracking prototype (beyond the agenda)</td><td><span class="pill ok">Working on webcam</span></td><td><code>eye-tracking/</code>, 3 real test recordings</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>How the system fits together</h2>
+  <pre class="flow">Webcam ─▶ Python eyetrack (MediaPipe iris tracking → eye-movement events → 25 measurements)
+                     │  measurement batch (JSON, shared format)
+                     ▼
+Wrist / gait ─▶  Next.js API  /api/v1/ingest ─▶ Supabase Postgres ─▶ Next.js dashboard
+   devices        (device key)                   (row-level security)   (sessions, flags, CSV)</pre>
+  <p class="muted" style="margin-top:10px">Every sensor uploads the same JSON format into the same assessment session, so eye, wrist and gait data for one visit line up by session and timestamp. No database changes are needed to add a sensor.</p>
+</section>
+
+<section>
+  <h2>Eye tracking: what a laptop webcam can and can't measure</h2>
+  <p>We simulated eyes with known true values and measured them the way each camera would. A 30 fps webcam gets timing and accuracy roughly right but cannot see fast or tiny movements.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Measurement</th><th>Webcam 30 fps</th><th>IR camera 120 fps</th><th>Lab 500 fps</th><th>True</th></tr></thead>
+    <tbody>
+      <tr><td>Saccade latency (ms)</td><td class="num">195</td><td class="num">193</td><td class="num">197</td><td class="num">194</td></tr>
+      <tr><td>Saccade gain</td><td class="num">0.98</td><td class="num">0.95</td><td class="num">0.95</td><td class="num">0.95</td></tr>
+      <tr><td>Saccade peak velocity (°/s)</td><td class="num"><span class="pill bad">145</span></td><td class="num">308</td><td class="num">422</td><td class="num">425</td></tr>
+      <tr><td>Square-wave jerks (per min)</td><td class="num"><span class="pill bad">0</span></td><td class="num">22</td><td class="num">20</td><td class="num">28</td></tr>
+      <tr><td>Blink duration (ms)</td><td class="num">152</td><td class="num">150</td><td class="num">150</td><td class="num">150</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted" style="margin-top:10px">Pupil size cannot be measured at all with a normal webcam; it needs infrared light.</p>
+</section>
+
+<section>
+  <h2>First real recordings</h2>
+  <p>Three ~100-second runs on one healthy team member, same day, laptop webcam.</p>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>Run 1</th><th>Run 2</th><th>Run 3</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>Frames tracked</td><td class="num">100%</td><td class="num">100%</td><td class="num">100%</td><td><span class="pill ok">Reliable</span></td></tr>
+      <tr><td>Saccade latency (median)</td><td class="num">229 ms</td><td class="num">234 ms</td><td class="num">245 ms</td><td><span class="pill ok">Repeats within ~15 ms</span></td></tr>
+      <tr><td>Saccade gain</td><td class="num">0.84</td><td class="num">0.79</td><td class="num">0.72</td><td><span class="pill warn">Drifted with posture</span></td></tr>
+      <tr><td>Head tilt change during run</td><td class="num">+7°</td><td class="num">+14°</td><td class="num">+11°</td><td><span class="pill warn">Main error source</span></td></tr>
+    </tbody>
+  </table></div>
+  <h3>What we changed because of it</h3>
+  <ul>
+    <li>New protocol with three 5-second <strong>drift checks</strong> that recalibrate before each task. In simulation with the same drift, saccade gain went from 0.83 (wrong) to 0.95 (true value).</li>
+    <li>A <strong>live warning</strong> on screen when the head moves more than 4° from where it was at calibration.</li>
+    <li>Timed tasks use only horizontal eye position; the webcam's vertical signal is too noisy.</li>
+  </ul>
+</section>
+
+<section class="callout">
+  <h3>For the hardware team</h3>
+  <p>The biggest error source on a laptop webcam is the head moving relative to the camera. A camera fixed to the head (the planned eye-tracking glasses) removes that problem. For pupil size and fast eye movements, aim for an infrared camera at 120 fps or more with 850 nm IR LEDs. Please have a mentor check the LED eye-safety design before any testing.</p>
+</section>
+
+<section class="callout">
+  <h3>For the wrist and gait teams</h3>
+  <p>Upload your results in the shared format in <code>docs/DATA_FORMAT.md</code>. Ask Srijan for a device key, add your measurement names to the registry before uploading, and log a <code>sync_tap</code> event so your timestamps line up with the eye data. The best open wrist dataset to start with is <a href="https://physionet.org/content/parkinsons-disease-smartwatch/1.0.0/">PADS</a> (469 people, Apple Watch on both wrists, non-commercial license).</p>
+</section>
+
+<section>
+  <h2>Datasets found</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Sensor</th><th>Best option</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Wrist</td><td><a href="https://physionet.org/content/parkinsons-disease-smartwatch/1.0.0/">PADS (PhysioNet)</a></td><td>PD, look-alike tremor conditions and controls; open download; CC BY-NC-SA</td></tr>
+      <tr><td>Gait</td><td><a href="https://physionet.org/content/gaitpdb/">gaitpdb</a>, <a href="https://archive.ics.uci.edu/dataset/245/daphnet+freezing+of+gait">Daphnet FoG</a></td><td>Foot-pressure insoles (93 PD, 73 controls); ankle accelerometers with freezing labels</td></tr>
+      <tr><td>Eye</td><td><a href="https://figshare.com/articles/dataset/GazeBase_Data_Repository/12912257">GazeBase</a> (healthy only)</td><td>No open PD eye dataset exists. Use GazeBase to validate our code; request PD data from study authors.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Next steps</h2>
+  <ul>
+    <li>Run the new drift-check protocol on a real face and confirm saccade gain stops drifting between runs.</li>
+    <li>Write a loader that turns PADS wrist data into our upload format, so wrist features flow through the same backend.</li>
+    <li>Test our saccade detector on GazeBase 1000 Hz recordings, and again after cutting them down to 30 fps, to measure the webcam error on real eyes.</li>
+  </ul>
+</section>
+
+<p class="muted">Code: <code>~/Documents/Projects/pd-eye-tracking</code> (local git repo, not pushed yet). Tests: 24 Python, 21 web, all passing.</p>
+</div>
