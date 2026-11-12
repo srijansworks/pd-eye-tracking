@@ -6,9 +6,8 @@ License: CC BY-NC-SA 4.0 (non-commercial; cite the paper and the DOI 10.13026/m0
 
 Layout used here (raw files, not the binary preprocessed ones):
   patients/patient_XXX.json              condition, age, gender, handedness, ...
-  movement/timeseries/XXX_<Task>_<Left|Right>Wrist.txt   comma-separated, 100 Hz,
-                                          accelerometer (g) + gyroscope (rad/s) channels
-Column order is detected from the data (accelerometer magnitude ~1 g from gravity).
+  movement/timeseries/XXX_<Task>_<Left|Right>Wrist.txt   comma-separated, 100 Hz:
+                                          time, acc X/Y/Z (g), gyro X/Y/Z (rad/s)
 
 Per participant: wrist features per task and wrist -> averaged within task groups
 (rest / posture / action / ...) -> mean of both wrists, the larger value, and the
@@ -27,12 +26,12 @@ import numpy as np
 from .wrist_features import wrist_features
 
 FS = 100.0
-TASK_GROUPS = {
-    "rest": ("Relaxed1", "Relaxed2"),
-    "rest_dualtask": ("RelaxedTask1", "RelaxedTask2"),
-    "posture": ("StretchHold", "HoldWeight"),
-    "action": ("DrinkGlas", "CrossArms", "TouchNose"),
-    "entrainment": ("Entrainment1", "Entrainment2"),
+TASK_GROUPS = {   # the 11 raw task names in movement/timeseries/ (checked against observation_*.json)
+    "rest": ("Relaxed",),
+    "rest_dualtask": ("RelaxedTask",),
+    "posture": ("StretchHold", "LiftHold", "HoldWeight"),
+    "action": ("PointFinger", "DrinkGlas", "CrossArms", "TouchIndex", "TouchNose"),
+    "entrainment": ("Entrainment",),
 }
 GROUP_OF = {task: g for g, tasks in TASK_GROUPS.items() for task in tasks}
 FNAME = re.compile(r"^(\d+)_([A-Za-z0-9]+)_(Left|Right)Wrist\.txt$")
@@ -48,16 +47,16 @@ def find_root(path: str | Path) -> Path:
 
 
 def load_signal(path: Path) -> tuple[np.ndarray, np.ndarray]:
-    """Return (acc[N,3] in g, gyro[N,3] in rad/s), detecting the column layout."""
+    """Return (acc[N,3] in g, gyro[N,3] in rad/s).
+
+    Column order from the dataset's own metadata (movement/observation_*.json):
+    Time [s], Accelerometer_X/Y/Z [g], Gyroscope_X/Y/Z [rad/s]. Note the Apple
+    Watch accelerometer here has gravity already removed (all axes average ~0).
+    """
     a = np.loadtxt(path, delimiter=",", ndmin=2)
-    if a.shape[1] == 7:          # leading time column
-        a = a[:, 1:]
-    if a.shape[1] != 6:
-        raise ValueError(f"{path.name}: expected 6 channels, got {a.shape[1]}")
-    g1 = np.median(np.linalg.norm(a[:, :3], axis=1))
-    g2 = np.median(np.linalg.norm(a[:, 3:], axis=1))
-    # Accelerometer at (near) rest reads ~1 g; gyroscope reads ~0 rad/s.
-    return (a[:, :3], a[:, 3:]) if abs(g1 - 1) < abs(g2 - 1) else (a[:, 3:], a[:, :3])
+    if a.shape[1] != 7:
+        raise ValueError(f"{path.name}: expected 7 columns (time + 6 channels), got {a.shape[1]}")
+    return a[:, 1:4], a[:, 4:7]
 
 
 def load_patients(root: Path) -> dict[str, dict]:
@@ -83,11 +82,20 @@ def participant_features(root: Path, pid: str) -> dict[str, float]:
     groups = {g for g, _, _ in per}
     names = {k for _, _, k in per}
     for g in groups:
+        # The "tremor side" = wrist with more 3.5-7.5 Hz power. Frequency-type features
+        # (where the peak is, how peaked) only mean something on the trembling wrist;
+        # on a still wrist the "peak" is random noise.
+        pl = np.mean(per.get((g, "Left", "acc_power_tremor_3_7hz"), [-np.inf]))
+        pr = np.mean(per.get((g, "Right", "acc_power_tremor_3_7hz"), [-np.inf]))
+        tremor_side = "Left" if pl >= pr else "Right"
         for k in names:
             L = np.mean(per.get((g, "Left", k), [np.nan]))
             R = np.mean(per.get((g, "Right", k), [np.nan]))
             feats[f"{g}__{k}__mean"] = float(np.nanmean([L, R]))
-            feats[f"{g}__{k}__max"] = float(np.nanmax([L, R]))
+            if k.endswith(("peak_freq", "spectral_entropy", "peak_prominence")):
+                feats[f"{g}__{k}__max"] = float(L if tremor_side == "Left" else R)   # value on the tremor side
+            else:
+                feats[f"{g}__{k}__max"] = float(np.nanmax([L, R]))
             if not k.endswith(("peak_freq", "spectral_entropy")):
                 # log-power features: asymmetry as absolute difference; others: relative difference
                 diff = abs(L - R)
