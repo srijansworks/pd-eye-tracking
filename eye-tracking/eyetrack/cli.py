@@ -125,7 +125,14 @@ def main(argv: list[str] | None = None) -> None:
     g = u.add_mutually_exclusive_group(required=True)
     g.add_argument("--session-id"); g.add_argument("--participant", help="participant code, creates a session")
 
+    for sp in (c, r, v):
+        sp.add_argument("--ir-method", choices=["classic", "hybrid", "nn"], default="classic",
+                        help="IR pupil detector: classic, or hybrid = neural network + ellipse fit "
+                             "(best on real eyes; needs torch and models/pupilnet.pt)")
     args = p.parse_args(argv)
+    if getattr(args, "ir_method", None):
+        from . import live as _live
+        _live.IR_METHOD = args.ir_method
 
     if args.cmd == "check-camera":
         from .live import check_camera

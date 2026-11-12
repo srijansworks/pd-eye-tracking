@@ -67,11 +67,14 @@ class PostureGuard:
         return self.warning
 
 
+IR_METHOD = "classic"   # set by the CLI (--ir-method); 'hybrid' needs torch + models/pupilnet.pt
+
+
 def make_tracker(camera_type: str = "webcam"):
     """'webcam' = MediaPipe face/iris landmarks; 'ir' = near-eye infrared pupil tracker (glasses)."""
     if camera_type == "ir":
         from .nearir.tracker import NearIRTracker
-        return NearIRTracker()
+        return NearIRTracker(method=IR_METHOD)
     return EyeLandmarker()
 
 

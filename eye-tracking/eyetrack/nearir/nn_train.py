@@ -76,7 +76,7 @@ def augment(x: torch.Tensor, y: torch.Tensor, g: torch.Generator) -> tuple[torch
     return x.clamp(0, 1), y
 
 
-def evaluate(model, X: np.ndarray, Y: np.ndarray, device: str, bs: int = 256) -> dict:
+def evaluate(model, X: np.ndarray, Y: np.ndarray, device: str, bs: int = 32) -> dict:
     model.eval()
     errs, confs = [], []
     with torch.no_grad():
@@ -85,6 +85,8 @@ def evaluate(model, X: np.ndarray, Y: np.ndarray, device: str, bs: int = 256) ->
             c, conf = decode(model(xb))
             errs.append(torch.linalg.norm(c.cpu() - torch.from_numpy(Y[i:i + bs]), dim=1).numpy() * SCALE)
             confs.append(conf.cpu().numpy())
+    if device == "mps":
+        torch.mps.empty_cache()                            # give memory back (8 GB Macs)
     e, cf = np.concatenate(errs), np.concatenate(confs)   # errors in FULL-resolution (640x480) pixels
     return {"within5px": float(np.mean(e <= 5)), "within10px": float(np.mean(e <= 10)),
             "median_err_px": float(np.median(e)), "_err": e, "_conf": cf}
@@ -101,7 +103,7 @@ def main(argv=None):
     torch.manual_seed(0)
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     c = Path(a.cache)
-    Xtr, Ytr = np.load(c / "train_X.npy"), np.load(c / "train_y.npy")
+    Xtr, Ytr = np.load(c / "train_X.npy", mmap_mode="r"), np.load(c / "train_y.npy")   # read from disk on demand (8 GB Macs)
     Xva, Yva = np.load(c / "val_X.npy"), np.load(c / "val_y.npy")
     assert Xtr.shape[1:] == (IN_H, IN_W)
     model = TinyUNet().to(device)
@@ -116,7 +118,7 @@ def main(argv=None):
         model.train()
         t0, perm, tot = time.time(), np.random.default_rng(ep).permutation(len(Xtr)), 0.0
         for i in range(0, len(perm), a.bs):
-            idx = perm[i:i + a.bs]
+            idx = np.sort(perm[i:i + a.bs])            # sorted indices = faster reads from the memory-mapped file
             xb = torch.from_numpy(Xtr[idx]).float().div(255).unsqueeze(1).to(device)
             yb = torch.from_numpy(Ytr[idx]).to(device)
             xb, yb = augment(xb, yb, g)

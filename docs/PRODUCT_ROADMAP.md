@@ -67,9 +67,20 @@ published detectors do better, and we haven't compared against them directly.
 - **Our own glasses will be easier than LPW:** a fixed IR LED setup, an IR-pass filter and a controlled indoor protocol.
 - Reproduce: `cd eye-tracking && .venv/bin/python -m eyetrack.nearir.eval_lpw --data ../data/lpw --step 10`
 
+### Neural network pupil detector (trained on LPW, tested on 4 people it never saw)
+| Detector | Within 5 px | Within 10 px | Median error |
+|---|---|---|---|
+| Classic (hand-built) | 45.7% | 48.8% | 93 px |
+| Neural network alone | 59.8% | 79.0% | 4.0 px |
+| **Hybrid: network finds it, ellipse fit refines it** (`--ir-method hybrid`) | **65.5%** | **79.5%** | **2.9 px** |
+
+Validation people (used to pick the model) reached 93.9%; the held-out group is harder (glasses frames).
+The hybrid also works on the synthetic glasses camera it never trained on (median 0.05 px).
+Model card and license (CC BY-NC 3.0, inherited from LPW): `eye-tracking/models/MODEL_CARD.md`.
+
 ## Next steps, in priority order
-1. **Train a small neural network for pupil finding on LPW** (we now have 130k labelled real frames) and
-   compare it with the classic detector on held-out participants. Then speed up detection for 120 fps.
+1. **Speed up the hybrid for live 120 fps** (now ~16 ms/frame): run the network every few frames and
+   track between, or convert it to Core ML. Recording now and analysing afterwards already works.
 2. **First glasses prototype → `eyetrack record --camera-type ir`** (protocol `eye_v3` with the light reflex).
 3. **Wrist band prototype → same upload format** (`docs/DATA_FORMAT.md`), with the sync tap.
 4. **Paired pilot data:** each volunteer wears both sensors in one session. Only this can show whether fusion helps.
