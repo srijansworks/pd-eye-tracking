@@ -1,0 +1,195 @@
+{
+  "n_features": 310,
+  "conditions": {
+    "Healthy": 79,
+    "Essential Tremor": 28,
+    "Other Movement Disorders": 60,
+    "Parkinson's": 276,
+    "Atypical Parkinsonism": 15,
+    "Multiple Sclerosis": 11
+  },
+  "comparisons": {
+    "PD_vs_healthy": {
+      "age_only (baseline)": {
+        "auc": 0.5520546688680976,
+        "auc_ci": [
+          0.47003457779866614,
+          0.6251277773084396
+        ],
+        "balanced_accuracy": 0.5611126398825903,
+        "sensitivity_at_90_specificity": 0.025362318840579712,
+        "n": 355,
+        "n_pos": 276
+      },
+      "age_sex (baseline)": {
+        "auc": 0.6526784076316272,
+        "auc_ci": [
+          0.5782019705698431,
+          0.7271460195681563
+        ],
+        "balanced_accuracy": 0.6697165657677491,
+        "sensitivity_at_90_specificity": 0.050724637681159424,
+        "n": 355,
+        "n_pos": 276
+      },
+      "wrist_logreg": {
+        "auc": 0.8823610346725372,
+        "auc_ci": [
+          0.8443765010351967,
+          0.9177354334027782
+        ],
+        "balanced_accuracy": 0.787401394239589,
+        "sensitivity_at_90_specificity": 0.717391304347826,
+        "n": 355,
+        "n_pos": 276
+      },
+      "wrist_hgb": {
+        "auc": 0.8537882957255549,
+        "auc_ci": [
+          0.8055058928644038,
+          0.8991524459425887
+        ],
+        "balanced_accuracy": 0.7341084204733077,
+        "sensitivity_at_90_specificity": 0.5398550724637681,
+        "n": 355,
+        "n_pos": 276
+      },
+      "wrist_plus_age_hgb": {
+        "auc": 0.8616308934140525,
+        "auc_ci": [
+          0.8157931475377287,
+          0.9050628254214873
+        ],
+        "balanced_accuracy": 0.7232617868281049,
+        "sensitivity_at_90_specificity": 0.5978260869565217,
+        "n": 355,
+        "n_pos": 276
+      },
+      "top_features_logreg": [
+        [
+          "entrainment__acc_peak_prominence__asym",
+          0.7511117541330365
+        ],
+        [
+          "action__gyro_power_tremor_3_7hz__asym",
+          -0.6407028713386204
+        ],
+        [
+          "action__acc_rms__asym",
+          0.5892255879532785
+        ],
+        [
+          "rest_dualtask__gyro_relpower_tremor_3_7hz__asym",
+          -0.5588979028734917
+        ],
+        [
+          "rest__gyro_peak_freq__max",
+          0.5498764329716915
+        ],
+        [
+          "rest_dualtask__gyro_power_tremor_3_7hz__asym",
+          0.4810905567586787
+        ],
+        [
+          "entrainment__acc_power_high_7_12hz__mean",
+          -0.47019386699074744
+        ],
+        [
+          "posture__gyro_peak_prominence__asym",
+          0.46864097609173344
+        ]
+      ]
+    },
+    "PD_vs_other_disorders": {
+      "age_only (baseline)": {
+        "auc": 0.5679188914314772,
+        "auc_ci": [
+          0.5037269496437552,
+          0.6309570063943217
+        ],
+        "balanced_accuracy": 0.563119755911518,
+        "sensitivity_at_90_specificity": 0.06159420289855073,
+        "n": 390,
+        "n_pos": 276
+      },
+      "age_sex (baseline)": {
+        "auc": 0.6137808288838037,
+        "auc_ci": [
+          0.549050628261574,
+          0.6771709180889285
+        ],
+        "balanced_accuracy": 0.5957284515636918,
+        "sensitivity_at_90_specificity": 0.15579710144927536,
+        "n": 390,
+        "n_pos": 276
+      },
+      "wrist_logreg": {
+        "auc": 0.6980994152046783,
+        "auc_ci": [
+          0.6387105702047782,
+          0.7534670670808947
+        ],
+        "balanced_accuracy": 0.6337719298245614,
+        "sensitivity_at_90_specificity": 0.3188405797101449,
+        "n": 390,
+        "n_pos": 276
+      },
+      "wrist_hgb": {
+        "auc": 0.7183447749809306,
+        "auc_ci": [
+          0.6592796493597439,
+          0.7726931191695308
+        ],
+        "balanced_accuracy": 0.6264302059496567,
+        "sensitivity_at_90_specificity": 0.34057971014492755,
+        "n": 390,
+        "n_pos": 276
+      },
+      "wrist_plus_age_hgb": {
+        "auc": 0.7240655987795577,
+        "auc_ci": [
+          0.6649941123675654,
+          0.7792308780554749
+        ],
+        "balanced_accuracy": 0.6512204424103738,
+        "sensitivity_at_90_specificity": 0.34057971014492755,
+        "n": 390,
+        "n_pos": 276
+      },
+      "top_features_logreg": [
+        [
+          "rest__gyro_power_tremor_3_7hz__asym",
+          0.7438308333617996
+        ],
+        [
+          "posture__acc_spectral_entropy__max",
+          0.735721249615885
+        ],
+        [
+          "posture__acc_relpower_high_7_12hz__asym",
+          0.6621944317743632
+        ],
+        [
+          "entrainment__gyro_power_high_7_12hz__mean",
+          0.6240476685096079
+        ],
+        [
+          "rest__acc_power_tremor_3_7hz__asym",
+          0.6174330533082591
+        ],
+        [
+          "entrainment__gyro_jerk_rms__asym",
+          0.6155588227004286
+        ],
+        [
+          "action__gyro_spectral_entropy__mean",
+          -0.6053070092662431
+        ],
+        [
+          "rest__acc_peak_freq__mean",
+          0.5489661600713522
+        ]
+      ]
+    }
+  }
+}

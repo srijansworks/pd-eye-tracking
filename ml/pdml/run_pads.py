@@ -49,16 +49,18 @@ def main(argv=None):
         y = pos[m].astype(int)
         demo = np.column_stack([age[m], sex[m]])
         print(f"\n== {cname}: {int(y.sum())} PD vs {int((1 - y).sum())} comparison ==")
-        rows = {
-            "age_only (baseline)": cross_validate(age[m].reshape(-1, 1), y, "logreg", "age only (baseline)"),
-            "age_sex (baseline)": cross_validate(demo, y, "logreg", "age + sex (baseline)"),
-            "wrist_logreg": cross_validate(X[m], y, "logreg", "wrist features, logistic regression"),
-            "wrist_hgb": cross_validate(X[m], y, "hgb", "wrist features, gradient boosting"),
-            "wrist_plus_age_hgb": cross_validate(np.column_stack([X[m], demo]), y, "hgb",
-                                                 "wrist + age + sex, gradient boosting"),
-        }
-        for r in rows.values():
-            print("  " + r.summary())
+        specs = [
+            ("age_only (baseline)", age[m].reshape(-1, 1), "logreg", 5, "age only (baseline)"),
+            ("age_sex (baseline)", demo, "logreg", 5, "age + sex (baseline)"),
+            ("wrist_logreg", X[m], "logreg", 5, "wrist features, logistic regression"),
+            # Gradient boosting is slow on this machine (~10 s per fit), so 2 x 5-fold here.
+            ("wrist_hgb", X[m], "hgb", 2, "wrist features, gradient boosting"),
+            ("wrist_plus_age_hgb", np.column_stack([X[m], demo]), "hgb", 2, "wrist + age + sex, gradient boosting"),
+        ]
+        rows = {}
+        for key, Xm, kind, reps, label in specs:
+            rows[key] = cross_validate(Xm, y, kind, label, n_repeats=reps)
+            print("  " + rows[key].summary(), flush=True)
         results["comparisons"][cname] = {
             k: {"auc": r.auc, "auc_ci": r.auc_ci, "balanced_accuracy": r.balanced_accuracy,
                 "sensitivity_at_90_specificity": r.sensitivity_at_90_spec, "n": r.n, "n_pos": r.n_pos}
