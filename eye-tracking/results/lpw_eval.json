@@ -1,0 +1,620 @@
+{
+  "summary": {
+    "videos": 66,
+    "frames": 13086,
+    "rate_5px": 0.547455295735901,
+    "rate_10px": 0.603622191655204,
+    "detected": 0.6789698914870854,
+    "per_video_rate_5px_median": 0.5748563218390804,
+    "by_confidence": {
+      "0.35-0.60": {
+        "share": 0.10476845483723063,
+        "within5px": 0.5040116703136397
+      },
+      "0.60-0.80": {
+        "share": 0.19731010239951094,
+        "within5px": 0.7873741285824942
+      },
+      "0.80-1.00": {
+        "share": 0.3768913342503439,
+        "within5px": 0.9002433090024331
+      }
+    }
+  },
+  "per_video": [
+    {
+      "video": "1/1.avi",
+      "n": 200,
+      "rate_5px": 0.76,
+      "rate_10px": 0.78,
+      "detected": 0.87,
+      "median_err_px_detected": 0.7976588409192908,
+      "ms_per_frame": 10.721394759821123
+    },
+    {
+      "video": "1/4.avi",
+      "n": 200,
+      "rate_5px": 0.7,
+      "rate_10px": 0.705,
+      "detected": 0.81,
+      "median_err_px_detected": 0.8824027736332629,
+      "ms_per_frame": 10.673496874951525
+    },
+    {
+      "video": "1/9.avi",
+      "n": 200,
+      "rate_5px": 0.56,
+      "rate_10px": 0.685,
+      "detected": 0.78,
+      "median_err_px_detected": 1.8044191171147912,
+      "ms_per_frame": 9.517916049808264
+    },
+    {
+      "video": "10/1.avi",
+      "n": 200,
+      "rate_5px": 0.73,
+      "rate_10px": 0.73,
+      "detected": 0.76,
+      "median_err_px_detected": 1.128723590909066,
+      "ms_per_frame": 9.237831425052718
+    },
+    {
+      "video": "10/11.avi",
+      "n": 200,
+      "rate_5px": 0.335,
+      "rate_10px": 0.385,
+      "detected": 0.49,
+      "median_err_px_detected": 2.032776625283737,
+      "ms_per_frame": 8.894776235538302
+    },
+    {
+      "video": "10/8.avi",
+      "n": 200,
+      "rate_5px": 0.65,
+      "rate_10px": 0.67,
+      "detected": 0.675,
+      "median_err_px_detected": 1.1954142943604276,
+      "ms_per_frame": 10.447283540270291
+    },
+    {
+      "video": "11/13.avi",
+      "n": 200,
+      "rate_5px": 0.31,
+      "rate_10px": 0.39,
+      "detected": 0.43,
+      "median_err_px_detected": 3.370590268924217,
+      "ms_per_frame": 10.204582739897887
+    },
+    {
+      "video": "11/2.avi",
+      "n": 200,
+      "rate_5px": 0.465,
+      "rate_10px": 0.49,
+      "detected": 0.52,
+      "median_err_px_detected": 1.710429422217418,
+      "ms_per_frame": 10.231023105152417
+    },
+    {
+      "video": "11/7.avi",
+      "n": 200,
+      "rate_5px": 0.64,
+      "rate_10px": 0.715,
+      "detected": 0.77,
+      "median_err_px_detected": 1.1727384767858284,
+      "ms_per_frame": 11.527622919966234
+    },
+    {
+      "video": "12/1.avi",
+      "n": 200,
+      "rate_5px": 0.855,
+      "rate_10px": 0.86,
+      "detected": 0.87,
+      "median_err_px_detected": 0.7644701413748392,
+      "ms_per_frame": 10.895485614819336
+    },
+    {
+      "video": "12/2.avi",
+      "n": 200,
+      "rate_5px": 0.835,
+      "rate_10px": 0.855,
+      "detected": 0.855,
+      "median_err_px_detected": 1.3875288810033515,
+      "ms_per_frame": 10.080578759516357
+    },
+    {
+      "video": "12/9.avi",
+      "n": 200,
+      "rate_5px": 0.62,
+      "rate_10px": 0.69,
+      "detected": 0.745,
+      "median_err_px_detected": 2.7205260989334517,
+      "ms_per_frame": 9.594675829575863
+    },
+    {
+      "video": "13/1.avi",
+      "n": 200,
+      "rate_5px": 0.325,
+      "rate_10px": 0.565,
+      "detected": 0.645,
+      "median_err_px_detected": 4.980786042683397,
+      "ms_per_frame": 9.826073114963947
+    },
+    {
+      "video": "13/2.avi",
+      "n": 200,
+      "rate_5px": 0.61,
+      "rate_10px": 0.705,
+      "detected": 0.835,
+      "median_err_px_detected": 2.052289884076469,
+      "ms_per_frame": 10.535046404693276
+    },
+    {
+      "video": "13/9.avi",
+      "n": 113,
+      "rate_5px": 0.5398230088495575,
+      "rate_10px": 0.6902654867256637,
+      "detected": 0.8053097345132744,
+      "median_err_px_detected": 3.4494586598105563,
+      "ms_per_frame": 9.615060875390087
+    },
+    {
+      "video": "14/10.avi",
+      "n": 200,
+      "rate_5px": 0.505,
+      "rate_10px": 0.505,
+      "detected": 0.515,
+      "median_err_px_detected": 1.1457677560324468,
+      "ms_per_frame": 9.95547184960742
+    },
+    {
+      "video": "14/17.avi",
+      "n": 200,
+      "rate_5px": 0.2,
+      "rate_10px": 0.215,
+      "detected": 0.585,
+      "median_err_px_detected": 170.35468560416132,
+      "ms_per_frame": 9.394820844609058
+    },
+    {
+      "video": "14/22.avi",
+      "n": 200,
+      "rate_5px": 0.455,
+      "rate_10px": 0.455,
+      "detected": 0.53,
+      "median_err_px_detected": 1.113018352988728,
+      "ms_per_frame": 9.972179585165577
+    },
+    {
+      "video": "15/1.avi",
+      "n": 200,
+      "rate_5px": 0.365,
+      "rate_10px": 0.45,
+      "detected": 0.515,
+      "median_err_px_detected": 2.8865642045693467,
+      "ms_per_frame": 10.311217915441375
+    },
+    {
+      "video": "15/2.avi",
+      "n": 200,
+      "rate_5px": 0.45,
+      "rate_10px": 0.595,
+      "detected": 0.645,
+      "median_err_px_detected": 2.7350378569058167,
+      "ms_per_frame": 9.42224710532173
+    },
+    {
+      "video": "15/7.avi",
+      "n": 200,
+      "rate_5px": 0.39,
+      "rate_10px": 0.49,
+      "detected": 0.51,
+      "median_err_px_detected": 2.4053426187010225,
+      "ms_per_frame": 8.837377315066988
+    },
+    {
+      "video": "16/1.avi",
+      "n": 200,
+      "rate_5px": 0.835,
+      "rate_10px": 0.835,
+      "detected": 0.835,
+      "median_err_px_detected": 0.8481824553243204,
+      "ms_per_frame": 10.020038110087626
+    },
+    {
+      "video": "16/13.avi",
+      "n": 174,
+      "rate_5px": 0.5747126436781609,
+      "rate_10px": 0.8505747126436781,
+      "detected": 0.9310344827586207,
+      "median_err_px_detected": 4.160642012808076,
+      "ms_per_frame": 8.397168581221445
+    },
+    {
+      "video": "16/2.avi",
+      "n": 200,
+      "rate_5px": 0.76,
+      "rate_10px": 0.8,
+      "detected": 0.805,
+      "median_err_px_detected": 1.8564363065800404,
+      "ms_per_frame": 9.17178875512036
+    },
+    {
+      "video": "17/12.avi",
+      "n": 200,
+      "rate_5px": 0.345,
+      "rate_10px": 0.375,
+      "detected": 0.75,
+      "median_err_px_detected": 72.99858090631713,
+      "ms_per_frame": 10.541589204513002
+    },
+    {
+      "video": "17/3.avi",
+      "n": 200,
+      "rate_5px": 0.65,
+      "rate_10px": 0.73,
+      "detected": 0.8,
+      "median_err_px_detected": 1.1057336261588173,
+      "ms_per_frame": 10.222610464916215
+    },
+    {
+      "video": "17/5.avi",
+      "n": 200,
+      "rate_5px": 0.765,
+      "rate_10px": 0.84,
+      "detected": 0.85,
+      "median_err_px_detected": 1.1202966927507614,
+      "ms_per_frame": 10.767676249524811
+    },
+    {
+      "video": "18/11.avi",
+      "n": 200,
+      "rate_5px": 0.53,
+      "rate_10px": 0.62,
+      "detected": 0.735,
+      "median_err_px_detected": 2.687739304257866,
+      "ms_per_frame": 9.137639795226278
+    },
+    {
+      "video": "18/2.avi",
+      "n": 200,
+      "rate_5px": 0.935,
+      "rate_10px": 0.945,
+      "detected": 0.955,
+      "median_err_px_detected": 0.5675032271625461,
+      "ms_per_frame": 10.165314189944183
+    },
+    {
+      "video": "18/7.avi",
+      "n": 200,
+      "rate_5px": 0.935,
+      "rate_10px": 0.965,
+      "detected": 0.975,
+      "median_err_px_detected": 1.011033062037802,
+      "ms_per_frame": 11.56237832561601
+    },
+    {
+      "video": "19/2.avi",
+      "n": 200,
+      "rate_5px": 0.67,
+      "rate_10px": 0.695,
+      "detected": 0.695,
+      "median_err_px_detected": 1.6300409033914947,
+      "ms_per_frame": 10.578279170658789
+    },
+    {
+      "video": "19/3.avi",
+      "n": 200,
+      "rate_5px": 0.525,
+      "rate_10px": 0.58,
+      "detected": 0.605,
+      "median_err_px_detected": 1.5621827817751914,
+      "ms_per_frame": 10.277348549934686
+    },
+    {
+      "video": "19/6.avi",
+      "n": 199,
+      "rate_5px": 0.2663316582914573,
+      "rate_10px": 0.2864321608040201,
+      "detected": 0.48743718592964824,
+      "median_err_px_detected": 4.380764436927772,
+      "ms_per_frame": 9.381463090437535
+    },
+    {
+      "video": "2/10.avi",
+      "n": 200,
+      "rate_5px": 0.11,
+      "rate_10px": 0.11,
+      "detected": 0.125,
+      "median_err_px_detected": 1.5027523244131407,
+      "ms_per_frame": 9.009277709992602
+    },
+    {
+      "video": "2/13.avi",
+      "n": 200,
+      "rate_5px": 0.87,
+      "rate_10px": 0.91,
+      "detected": 0.925,
+      "median_err_px_detected": 1.6062263823128315,
+      "ms_per_frame": 8.668043384022894
+    },
+    {
+      "video": "2/4.avi",
+      "n": 200,
+      "rate_5px": 0.79,
+      "rate_10px": 0.795,
+      "detected": 0.795,
+      "median_err_px_detected": 1.2152139333365948,
+      "ms_per_frame": 11.990578969780472
+    },
+    {
+      "video": "20/3.avi",
+      "n": 200,
+      "rate_5px": 0.455,
+      "rate_10px": 0.475,
+      "detected": 0.635,
+      "median_err_px_detected": 1.8571239305740883,
+      "ms_per_frame": 10.248328954257886
+    },
+    {
+      "video": "20/4.avi",
+      "n": 200,
+      "rate_5px": 0.575,
+      "rate_10px": 0.575,
+      "detected": 0.62,
+      "median_err_px_detected": 1.107019820401422,
+      "ms_per_frame": 11.771676264907
+    },
+    {
+      "video": "20/7.avi",
+      "n": 200,
+      "rate_5px": 0.895,
+      "rate_10px": 0.9,
+      "detected": 0.905,
+      "median_err_px_detected": 1.1762797962928853,
+      "ms_per_frame": 9.659442724951077
+    },
+    {
+      "video": "21/11.avi",
+      "n": 200,
+      "rate_5px": 0.695,
+      "rate_10px": 0.75,
+      "detected": 0.77,
+      "median_err_px_detected": 1.407329437549894,
+      "ms_per_frame": 11.641675229693647
+    },
+    {
+      "video": "21/12.avi",
+      "n": 200,
+      "rate_5px": 0.69,
+      "rate_10px": 0.69,
+      "detected": 0.775,
+      "median_err_px_detected": 1.341557825046735,
+      "ms_per_frame": 10.267163974713185
+    },
+    {
+      "video": "21/4.avi",
+      "n": 200,
+      "rate_5px": 0.63,
+      "rate_10px": 0.63,
+      "detected": 0.635,
+      "median_err_px_detected": 2.0837208029327607,
+      "ms_per_frame": 9.71170037984848
+    },
+    {
+      "video": "22/1.avi",
+      "n": 200,
+      "rate_5px": 0.48,
+      "rate_10px": 0.55,
+      "detected": 0.665,
+      "median_err_px_detected": 0.8264067258059138,
+      "ms_per_frame": 10.887538735114504
+    },
+    {
+      "video": "22/17.avi",
+      "n": 200,
+      "rate_5px": 0.325,
+      "rate_10px": 0.36,
+      "detected": 0.715,
+      "median_err_px_detected": 9.72952083656524,
+      "ms_per_frame": 14.040633119511767
+    },
+    {
+      "video": "22/2.avi",
+      "n": 200,
+      "rate_5px": 0.615,
+      "rate_10px": 0.645,
+      "detected": 0.72,
+      "median_err_px_detected": 1.1495634190140123,
+      "ms_per_frame": 12.010900414388743
+    },
+    {
+      "video": "3/16.avi",
+      "n": 200,
+      "rate_5px": 0.0,
+      "rate_10px": 0.0,
+      "detected": 0.125,
+      "median_err_px_detected": 168.18201753998642,
+      "ms_per_frame": 10.980232459114632
+    },
+    {
+      "video": "3/19.avi",
+      "n": 200,
+      "rate_5px": 0.51,
+      "rate_10px": 0.735,
+      "detected": 0.795,
+      "median_err_px_detected": 3.3121463772021333,
+      "ms_per_frame": 11.101419195183553
+    },
+    {
+      "video": "3/21.avi",
+      "n": 200,
+      "rate_5px": 0.935,
+      "rate_10px": 0.945,
+      "detected": 0.95,
+      "median_err_px_detected": 1.262759299790027,
+      "ms_per_frame": 10.11095729911176
+    },
+    {
+      "video": "4/1.avi",
+      "n": 200,
+      "rate_5px": 0.005,
+      "rate_10px": 0.01,
+      "detected": 0.4,
+      "median_err_px_detected": 219.08571870520063,
+      "ms_per_frame": 8.839547040479374
+    },
+    {
+      "video": "4/12.avi",
+      "n": 200,
+      "rate_5px": 0.045,
+      "rate_10px": 0.145,
+      "detected": 0.31,
+      "median_err_px_detected": 11.956251521068513,
+      "ms_per_frame": 10.715005429883604
+    },
+    {
+      "video": "4/2.avi",
+      "n": 200,
+      "rate_5px": 0.375,
+      "rate_10px": 0.455,
+      "detected": 0.615,
+      "median_err_px_detected": 2.887183794649123,
+      "ms_per_frame": 10.298598314548144
+    },
+    {
+      "video": "5/10.avi",
+      "n": 200,
+      "rate_5px": 0.22,
+      "rate_10px": 0.295,
+      "detected": 0.355,
+      "median_err_px_detected": 3.486330629426334,
+      "ms_per_frame": 9.315948159564869
+    },
+    {
+      "video": "5/11.avi",
+      "n": 200,
+      "rate_5px": 0.015,
+      "rate_10px": 0.02,
+      "detected": 0.09,
+      "median_err_px_detected": 141.1996953767977,
+      "ms_per_frame": 8.975264385080663
+    },
+    {
+      "video": "5/6.avi",
+      "n": 200,
+      "rate_5px": 0.0,
+      "rate_10px": 0.0,
+      "detected": 0.005,
+      "median_err_px_detected": 74.09640515647854,
+      "ms_per_frame": 9.716551029705442
+    },
+    {
+      "video": "6/13.avi",
+      "n": 200,
+      "rate_5px": 0.765,
+      "rate_10px": 0.85,
+      "detected": 0.875,
+      "median_err_px_detected": 1.5940081911416126,
+      "ms_per_frame": 8.968523715302581
+    },
+    {
+      "video": "6/2.avi",
+      "n": 200,
+      "rate_5px": 0.625,
+      "rate_10px": 0.73,
+      "detected": 0.78,
+      "median_err_px_detected": 1.6002483815390374,
+      "ms_per_frame": 9.88563041013549
+    },
+    {
+      "video": "6/5.avi",
+      "n": 200,
+      "rate_5px": 0.76,
+      "rate_10px": 0.84,
+      "detected": 0.865,
+      "median_err_px_detected": 1.8147461280578725,
+      "ms_per_frame": 10.27240018484008
+    },
+    {
+      "video": "7/15.avi",
+      "n": 200,
+      "rate_5px": 0.48,
+      "rate_10px": 0.51,
+      "detected": 0.65,
+      "median_err_px_detected": 1.131598749502448,
+      "ms_per_frame": 9.358626039829687
+    },
+    {
+      "video": "7/18.avi",
+      "n": 200,
+      "rate_5px": 0.625,
+      "rate_10px": 0.645,
+      "detected": 0.66,
+      "median_err_px_detected": 0.4421329066737329,
+      "ms_per_frame": 9.183441460554604
+    },
+    {
+      "video": "7/21.avi",
+      "n": 200,
+      "rate_5px": 0.49,
+      "rate_10px": 0.53,
+      "detected": 0.535,
+      "median_err_px_detected": 1.0045581715993253,
+      "ms_per_frame": 9.529701485153055
+    },
+    {
+      "video": "8/2.avi",
+      "n": 200,
+      "rate_5px": 0.895,
+      "rate_10px": 0.93,
+      "detected": 0.935,
+      "median_err_px_detected": 1.0247246440592856,
+      "ms_per_frame": 9.695659379576682
+    },
+    {
+      "video": "8/7.avi",
+      "n": 200,
+      "rate_5px": 0.84,
+      "rate_10px": 0.865,
+      "detected": 0.9,
+      "median_err_px_detected": 0.6588039063077131,
+      "ms_per_frame": 11.38574892989709
+    },
+    {
+      "video": "8/9.avi",
+      "n": 200,
+      "rate_5px": 0.775,
+      "rate_10px": 0.815,
+      "detected": 0.835,
+      "median_err_px_detected": 1.9393428535799435,
+      "ms_per_frame": 9.559206659978372
+    },
+    {
+      "video": "9/16.avi",
+      "n": 200,
+      "rate_5px": 0.2,
+      "rate_10px": 0.335,
+      "detected": 0.54,
+      "median_err_px_detected": 7.331961979923149,
+      "ms_per_frame": 10.801858115301002
+    },
+    {
+      "video": "9/17.avi",
+      "n": 200,
+      "rate_5px": 0.425,
+      "rate_10px": 0.735,
+      "detected": 0.83,
+      "median_err_px_detected": 4.983816699460038,
+      "ms_per_frame": 9.478314959924319
+    },
+    {
+      "video": "9/18.avi",
+      "n": 200,
+      "rate_5px": 0.925,
+      "rate_10px": 0.98,
+      "detected": 0.98,
+      "median_err_px_detected": 0.47956656189941793,
+      "ms_per_frame": 9.13783874057117
+    }
+  ]
+}

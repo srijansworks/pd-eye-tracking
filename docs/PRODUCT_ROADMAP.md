@@ -19,7 +19,7 @@ Each sensor gets its own model; a **late-fusion** layer combines whichever senso
 | Component | Status | Evidence |
 |---|---|---|
 | Webcam eye tracking (interim) | ✅ Working on real faces | 4 real recordings. Latency repeats within ~15 ms. Gain 0.92 after drift-check and smoothing fixes |
-| **Glasses eye tracking (near-eye IR)** | ✅ **Built; validated on synthetic IR video only** | Pupil centre error 0.05 px (open eye); 120 fps simulation: gain 0.949/0.95, pursuit 0.849/0.85, pupil 4.02/4.01 mm, light reflex latency 240/256 ms |
+| **Glasses eye tracking (near-eye IR)** | ✅ **Built; tested on synthetic AND real IR eye video (LPW)** | Pupil centre error 0.05 px (open eye); 120 fps simulation: gain 0.949/0.95, pursuit 0.849/0.85, pupil 4.02/4.01 mm, light reflex latency 240/256 ms |
 | Pupillary light reflex test | ✅ In protocol `eye_v3` (screen flashes) | Synthetic: amplitude 27–32% vs ~30% true |
 | Wrist tremor features | ✅ Built | Recovers tremor frequency ±0.5 Hz on test signals |
 | **Wrist model on real PD data (PADS)** | ✅ **Trained and cross-validated** | See below |
@@ -47,9 +47,29 @@ hypothesis until we have both sensors on the same people.
 Caveats: one dataset, one device, one clinic; the PD group is larger than the others; there's no external test set.
 The original PADS paper reports its own results; compare with it in the write-up rather than with ours alone.
 
+## Pupil detector on REAL near-eye infrared video (LPW)
+LPW = Labelled Pupils in the Wild (Tonsen et al., ETRA 2016; CC BY-NC 3.0): 66 videos, 22 people,
+640×480, head-mounted dark-pupil IR camera, indoor + outdoor, glasses, make-up. Hand-labelled pupil centres.
+Every 10th frame scored (13,086 frames); a missed frame counts as a failure.
+
+| Detector version | Within 5 px | Within 10 px | High-confidence (≥0.8) frames correct |
+|---|---|---|---|
+| v1: single darkness threshold | 48.8% | 51.5% | 79% (49% of frames) |
+| **v2: multi-threshold candidates + contrast check** | **54.7%** | **60.4%** | **90%** (38% of frames) |
+
+For context, the LPW paper's 2016 detectors (incl. Pupil Labs') reached roughly 30% within 5 px. Newer
+published detectors do better, and we haven't compared against them directly.
+- 16+ videos ≥ 80% correct; the hardest are washed-out pupils behind glasses frames, blur, and heavy mascara.
+- **Real-data bugs found and fixed:** a size "memory" that locked out the true pupil for whole videos (0% → 72%),
+  and eyelashes darker than the pupil hiding it from a single threshold (several videos 0–2% → 33–51%).
+- **Open issues:** some clean videos regressed in v2 (e.g. 96% → 70%), and speed is ~10 ms/frame at 640×480
+  (real-time 120 fps needs < 8.3 ms).
+- **Our own glasses will be easier than LPW:** a fixed IR LED setup, an IR-pass filter and a controlled indoor protocol.
+- Reproduce: `cd eye-tracking && .venv/bin/python -m eyetrack.nearir.eval_lpw --data ../data/lpw --step 10`
+
 ## Next steps, in priority order
-1. **Validate the IR pupil detector on REAL near-eye images.** Options: a public labelled near-eye dataset
-   (e.g. "Labelled Pupils in the Wild", Tonsen et al. 2016), or the hardware team's first camera.
+1. **Train a small neural network for pupil finding on LPW** (we now have 130k labelled real frames) and
+   compare it with the classic detector on held-out participants. Then speed up detection for 120 fps.
 2. **First glasses prototype → `eyetrack record --camera-type ir`** (protocol `eye_v3` with the light reflex).
 3. **Wrist band prototype → same upload format** (`docs/DATA_FORMAT.md`), with the sync tap.
 4. **Paired pilot data:** each volunteer wears both sensors in one session. Only this can show whether fusion helps.
