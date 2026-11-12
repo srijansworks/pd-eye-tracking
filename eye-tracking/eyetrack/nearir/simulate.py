@@ -25,9 +25,14 @@ from .tracker import NearIRTracker
 
 def simulate_ir(fps: float = 120.0, seed: int = 1, duration_s: float | None = None,
                 pupil_mm: float = 4.0, noise: float = 5.0, camera: EyeCamera | None = None,
+                protocol: str = "eye_v3", plr_amplitude_mm: float = 1.2, plr_latency_s: float = 0.24,
+                plr_tau_constrict_s: float = 0.15, plr_tau_redilate_s: float = 0.8,
                 **eye_kwargs) -> tuple[Recording, list[dict], dict]:
+    from ..stimulus import PROTOCOLS
     cam = camera or EyeCamera()
-    _, stim, truth = synthetic.simulate(fps=fps, seed=seed, return_trajectory=True, **eye_kwargs)
+    proto = PROTOCOLS[protocol](seed=seed)
+    _, stim, truth = synthetic.simulate(fps=fps, seed=seed, return_trajectory=True, protocol=proto, **eye_kwargs)
+    lights = [(e["t"], e["t"] + e["duration_s"]) for e in stim if e["kind"] == "light_on"]
     th, gx, gy = truth.pop("_trajectory")
     blinks = truth.pop("_blinks")
     rng = np.random.default_rng(seed + 1000)
@@ -36,12 +41,16 @@ def simulate_ir(fps: float = 120.0, seed: int = 1, duration_s: float | None = No
 
     tracker = NearIRTracker()
     rows, true_pupil_px = [], []
-    from ..stimulus import eye_v2
-    proto = eye_v2(seed=seed)
+    resp, dt = 0.0, 1 / fps            # light-reflex constriction state (mm)
     for t in ts:
         ex, ey = float(np.interp(t, th, gx)), float(np.interp(t, th, gy))
         # Pupil: slow "hippus" oscillation around the base size.
-        pmm = pupil_mm + 0.25 * math.sin(2 * math.pi * 0.15 * t)
+        # Light reflex: after a latency the pupil constricts quickly toward
+        # -plr_amplitude_mm while the light is on, then re-dilates slowly.
+        lit = any(a + plr_latency_s <= t < b + plr_latency_s for a, b in lights)
+        target, tau = (plr_amplitude_mm, plr_tau_constrict_s) if lit else (0.0, plr_tau_redilate_s)
+        resp += (target - resp) * (1 - math.exp(-dt / tau))
+        pmm = pupil_mm + 0.25 * math.sin(2 * math.pi * 0.15 * t) - resp
         lid = 1.0
         for b0, dur in blinks:
             if b0 <= t < b0 + dur:           # triangular close-open profile
@@ -63,9 +72,12 @@ def simulate_ir(fps: float = 120.0, seed: int = 1, duration_s: float | None = No
 
     stim = [e for e in stim if e["t"] < T]
     meta = {"source": "synthetic_nearir", "camera_type": "nearir", "fps_nominal": fps,
-            "protocol": "eye_v2", "seed": seed, "stimulus_events": stim, "is_synthetic": True,
+            "protocol": proto.name, "seed": seed, "stimulus_events": stim, "is_synthetic": True,
             "camera": {"width": cam.width, "height": cam.height, "px_per_mm": cam.px_per_mm},
             "illumination": "infrared_850nm", "mm_per_px": 1 / cam.px_per_mm}
     truth["pupil_px_median"] = float(np.nanmedian(true_pupil_px))
     truth["pupil_mm_median"] = float(np.nanmedian(true_pupil_px) / cam.px_per_mm)
+    truth["plr_latency_ms"] = plr_latency_s * 1000
+    truth["plr_amplitude_mm"] = plr_amplitude_mm * (1 - math.exp(-1.0 / plr_tau_constrict_s))   # 1 s flash
+    truth["plr_max_velocity_mm_s"] = plr_amplitude_mm / plr_tau_constrict_s                    # first-order peak
     return Recording.from_rows(rows, meta), stim, truth

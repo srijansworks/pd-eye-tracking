@@ -17,7 +17,7 @@ import numpy as np
 from .camera import Camera
 from .landmarks import EyeLandmarker, draw_overlay
 from .recording import Recording
-from .stimulus import ScreenGeometry, eye_v2, render
+from .stimulus import ScreenGeometry, eye_v2, eye_v3, render
 
 WIN = "eyetrack"
 
@@ -164,7 +164,8 @@ def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
         w, h = 1440, 900
     geom = ScreenGeometry(w, h, screen_width_cm, distance_cm)
     mx, my = geom.max_deg()
-    proto = eye_v2(amp_x=min(10.0, mx - 2), amp_y=min(7.0, my - 2), seed=seed)
+    make_proto = eye_v3 if camera_type == "ir" else eye_v2   # light reflex needs the IR pupil camera
+    proto = make_proto(amp_x=min(10.0, mx - 2), amp_y=min(7.0, my - 2), seed=seed)
 
     writer = None
     rows: list[dict] = []
@@ -205,6 +206,7 @@ def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
         t_start = time.monotonic()
         started_utc = datetime.now(timezone.utc)
         shown = None
+        shown_light = False
         guard = PostureGuard()
         while True:
             now = time.monotonic() - t_start
@@ -213,12 +215,16 @@ def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
                 break
             tx, ty = seg.target(tl)
             msg = ("Head moved - please return to your starting position" if guard.warning else "")
-            cv2.imshow(WIN, render(geom, tx, ty, msg, text_color=(0, 200, 255)))
+            lit = seg.light(tl)
+            cv2.imshow(WIN, render(geom, tx, ty, msg, text_color=(0, 200, 255), light=lit))
             if (cv2.waitKey(1) & 0xFF) == 27:
                 raise KeyboardInterrupt
             t_disp = time.monotonic() - t_start
             # Log the ACTUAL time each target change reached the screen (not the
             # scheduled time) — this is what saccade latency is measured from.
+            if lit != shown_light:   # log when the white flash ACTUALLY reached the screen
+                stim_events.append({"t": t_disp, "task": seg.task, "kind": "light_on" if lit else "light_off"})
+                shown_light = lit
             key = (seg.task, round(tx, 3), round(ty, 3)) if not seg.pursuit else (seg.task, "pursuit")
             if key != shown:
                 if seg.pursuit:
