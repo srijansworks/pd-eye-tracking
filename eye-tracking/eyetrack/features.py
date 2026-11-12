@@ -345,6 +345,40 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
                       note="Variability of pupil size over the recording (includes normal hippus)."))
         if "nearir" not in q["flags"]:
             q["flags"].append("nearir")
+
+        # ---- Pupillary light reflex (eye_v3 'plr' block) ----------------
+        flashes = [e for e in stim_events if e["kind"] == "light_on"]
+        amps, lats, vels = [], [], []
+        pp = np.where(near_blink, np.nan, pupil) * scale
+        for e in flashes:
+            t0 = e["t"]
+            base_m = (t >= t0 - 0.5) & (t < t0) & np.isfinite(pp)
+            win = (t >= t0) & (t < t0 + 1.5) & np.isfinite(pp)
+            if base_m.sum() < 3 or win.sum() < 5:
+                continue
+            base = float(np.median(pp[base_m]))
+            tw, pw = t[win], pp[win]
+            k = max(3, int(round(0.10 * fps)))                  # ~100 ms moving average vs pixel noise
+            # Pad with edge values, not zeros: zero padding fakes a big "constriction" at the window edge.
+            ps = np.convolve(np.pad(pw, (k // 2, k - 1 - k // 2), mode="edge"), np.ones(k) / k, mode="valid")
+            drop = base - ps.min()
+            if drop <= 0:
+                continue
+            amps.append(drop / base)
+            onset = np.where(ps <= base - 0.1 * drop)[0]        # time to 10% of the constriction
+            if len(onset):
+                lats.append((tw[onset[0]] - t0) * 1000)
+            vels.append(float(np.max(-np.gradient(ps, tw))))
+        if amps:
+            cover = len(amps) / len(flashes)
+            fl = base_flags + (["low_temporal_resolution"] if fps < 60 else [])
+            out.append(_m("plr_constriction_amplitude", float(np.median(amps)), "ratio", "plr", cover * found, fl,
+                          n_flashes=len(amps), note="(baseline - minimum) / baseline pupil diameter"))
+            if lats:
+                out.append(_m("plr_latency", float(np.median(lats)), "ms", "plr", cover * min(1, fps / 120), fl,
+                              note="time from flash on screen to 10% of the constriction; includes screen latency"))
+            out.append(_m("plr_max_constriction_velocity", float(np.median(vels)), unit + "/s", "plr",
+                          cover * found, fl))
     else:
         q["unavailable"] = {
             "pupil_diameter": "Needs infrared imaging; RGB webcam cannot separate pupil from iris.",

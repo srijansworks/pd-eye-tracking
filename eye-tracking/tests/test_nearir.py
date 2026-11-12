@@ -60,5 +60,10 @@ def test_glasses_pipeline_end_to_end_60fps():
     assert d["pupil_diameter_median"] == pytest.approx(truth["pupil_mm_median"], abs=0.1)   # mm
     assert d["pupil_found_fraction"] > 0.95
     assert "nearir" in q["flags"]
+    # Pupillary light reflex (eye_v3 'plr' block): latency to 10% of constriction
+    # = 240 ms delay + 0.15 s * ln(1/0.9) ~ 256 ms; amplitude ~30% of a 4 mm pupil.
+    assert d["plr_latency"] == pytest.approx(256, abs=35)
+    assert d["plr_constriction_amplitude"] == pytest.approx(0.30, abs=0.06)
+    assert 4.0 < d["plr_max_constriction_velocity"] < 10.0          # mm/s
     batch = build_batch(rec, ms, q, stim, session_id="00000000-0000-4000-8000-000000000002")
     json.dumps(batch, allow_nan=False)                          # API-safe JSON

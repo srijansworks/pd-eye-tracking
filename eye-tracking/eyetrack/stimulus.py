@@ -35,6 +35,10 @@ class Segment:
     duration: float
     steps: list[tuple[float, float, float]] = field(default_factory=list)  # (t_local, x_deg, y_deg)
     pursuit: tuple[float, float] | None = None  # (amplitude_deg, freq_hz) for sinusoidal motion
+    flashes: list[tuple[float, float]] = field(default_factory=list)  # (t_on, duration): white screen
+
+    def light(self, t_local: float) -> bool:
+        return any(t0 <= t_local < t0 + d for t0, d in self.flashes)
 
     def target(self, t_local: float) -> tuple[float, float]:
         if self.pursuit:
@@ -81,6 +85,9 @@ class Protocol:
             if s.pursuit:
                 out.append({"t": start, "task": s.task, "kind": "pursuit_start",
                             "amplitude_deg": s.pursuit[0], "freq_hz": s.pursuit[1]})
+            for t0, d in s.flashes:
+                out.append({"t": start + t0, "task": s.task, "kind": "light_on", "duration_s": d})
+                out.append({"t": start + t0 + d, "task": s.task, "kind": "light_off"})
             start += s.duration
         return out
 
@@ -129,15 +136,16 @@ class ScreenGeometry:
 
 
 def render(geom: ScreenGeometry, x_deg: float | None, y_deg: float | None, text: str = "",
-           text_color: tuple[int, int, int] = (160, 160, 160)) -> np.ndarray:
+           text_color: tuple[int, int, int] = (160, 160, 160), light: bool = False) -> np.ndarray:
     import cv2
 
-    img = np.zeros((geom.height_px, geom.width_px, 3), np.uint8)
+    img = np.full((geom.height_px, geom.width_px, 3), 255 if light else 0, np.uint8)
     if x_deg is not None:
         x, y = geom.deg_to_px(x_deg, y_deg)
         r = max(6, int(0.3 * geom.px_per_cm))       # ~0.6 cm dot
-        cv2.circle(img, (x, y), r, (255, 255, 255), -1)
-        cv2.circle(img, (x, y), max(2, r // 4), (0, 0, 0), -1)  # centre mark helps precise fixation
+        dot, mark = ((0, 0, 0), (255, 255, 255)) if light else ((255, 255, 255), (0, 0, 0))
+        cv2.circle(img, (x, y), r, dot, -1)
+        cv2.circle(img, (x, y), max(2, r // 4), mark, -1)  # centre mark helps precise fixation
     if text:
         cv2.putText(img, text, (30, geom.height_px - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, text_color, 2)
     return img
@@ -162,4 +170,12 @@ def eye_v2(amp_x: float = 10.0, amp_y: float = 7.0, n_trials: int = 20, seed: in
                                _drift_check(amp_x), second, _drift_check(amp_x), pursuit])
 
 
-PROTOCOLS = {"eye_v1": eye_v1, "eye_v2": eye_v2}
+def eye_v3(amp_x: float = 10.0, amp_y: float = 7.0, n_trials: int = 20, seed: int = 0) -> Protocol:
+    """eye_v2 + a PUPILLARY LIGHT REFLEX block (needs the near-eye IR camera to measure).
+    The screen turns white for 1 s, three times, 4 s apart, while the person looks at the centre dot."""
+    v2 = eye_v2(amp_x, amp_y, n_trials, seed)
+    plr = Segment("plr", 14.0, [(0.0, 0.0, 0.0)], flashes=[(3.0, 1.0), (7.5, 1.0), (12.0, 1.0)])
+    return Protocol("eye_v3", v2.segments + [plr])
+
+
+PROTOCOLS = {"eye_v1": eye_v1, "eye_v2": eye_v2, "eye_v3": eye_v3}
