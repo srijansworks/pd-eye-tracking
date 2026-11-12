@@ -51,7 +51,7 @@ if nn is not None:
             d1 = self.d1(torch.cat([up(d2, e1), e1], 1))
             return self.head(d1)[:, 0]              # (B,120,160) logits
 
-    def decode(logits: "torch.Tensor", win: int = 2) -> tuple["torch.Tensor", "torch.Tensor"]:
+    def decode(logits: "torch.Tensor", win: int = 3) -> tuple["torch.Tensor", "torch.Tensor"]:
         """Logits (B,H,W) -> centres (B,2) in heatmap pixels and confidence (B,)."""
         B, H, W = logits.shape
         p = torch.softmax(logits.reshape(B, -1), 1).reshape(B, H, W)

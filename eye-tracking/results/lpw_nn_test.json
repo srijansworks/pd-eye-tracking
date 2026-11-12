@@ -1,0 +1,117 @@
+{
+  "summary": {
+    "test_people": [
+      "2",
+      "5",
+      "10",
+      "17"
+    ],
+    "frames": 2400,
+    "classic": {
+      "within5px": 0.45666666666666667,
+      "within10px": 0.48833333333333334,
+      "median_err_px": 92.775753148858
+    },
+    "nn": {
+      "within5px": 0.5983333333333334,
+      "within10px": 0.7895833333333333,
+      "median_err_px": 4.01442912366347
+    },
+    "hybrid": {
+      "within5px": 0.6545833333333333,
+      "within10px": 0.795,
+      "median_err_px": 2.9427652666835815
+    },
+    "ms_per_frame": {
+      "nn": 9.706547960674166,
+      "hybrid_extra": 6.122860844613267,
+      "classic": 9.555725117306187
+    }
+  },
+  "per_video": [
+    {
+      "video": "10/1.avi",
+      "n": 200,
+      "classic": 0.73,
+      "nn": 0.93,
+      "hybrid": 0.96
+    },
+    {
+      "video": "10/11.avi",
+      "n": 200,
+      "classic": 0.335,
+      "nn": 0.465,
+      "hybrid": 0.585
+    },
+    {
+      "video": "10/8.avi",
+      "n": 200,
+      "classic": 0.65,
+      "nn": 0.96,
+      "hybrid": 0.93
+    },
+    {
+      "video": "17/12.avi",
+      "n": 200,
+      "classic": 0.345,
+      "nn": 0.295,
+      "hybrid": 0.7
+    },
+    {
+      "video": "17/3.avi",
+      "n": 200,
+      "classic": 0.65,
+      "nn": 0.945,
+      "hybrid": 0.86
+    },
+    {
+      "video": "17/5.avi",
+      "n": 200,
+      "classic": 0.765,
+      "nn": 0.915,
+      "hybrid": 0.895
+    },
+    {
+      "video": "2/10.avi",
+      "n": 200,
+      "classic": 0.11,
+      "nn": 0.215,
+      "hybrid": 0.3
+    },
+    {
+      "video": "2/13.avi",
+      "n": 200,
+      "classic": 0.87,
+      "nn": 0.75,
+      "hybrid": 0.925
+    },
+    {
+      "video": "2/4.avi",
+      "n": 200,
+      "classic": 0.79,
+      "nn": 0.925,
+      "hybrid": 0.94
+    },
+    {
+      "video": "5/10.avi",
+      "n": 200,
+      "classic": 0.22,
+      "nn": 0.36,
+      "hybrid": 0.31
+    },
+    {
+      "video": "5/11.avi",
+      "n": 200,
+      "classic": 0.015,
+      "nn": 0.36,
+      "hybrid": 0.39
+    },
+    {
+      "video": "5/6.avi",
+      "n": 200,
+      "classic": 0.0,
+      "nn": 0.06,
+      "hybrid": 0.06
+    }
+  ]
+}

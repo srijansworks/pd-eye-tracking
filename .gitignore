@@ -8,7 +8,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 # model weights & recordings (never commit raw video or participant data)
-eye-tracking/models/
+eye-tracking/models/*
+!eye-tracking/models/pupilnet.pt
+!eye-tracking/models/pupilnet.history.json
+!eye-tracking/models/MODEL_CARD.md
 eye-tracking/recordings/
 *.mp4
 *.mov
