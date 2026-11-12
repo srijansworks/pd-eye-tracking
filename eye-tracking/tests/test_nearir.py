@@ -67,3 +67,12 @@ def test_glasses_pipeline_end_to_end_60fps():
     assert 4.0 < d["plr_max_constriction_velocity"] < 10.0          # mm/s
     batch = build_batch(rec, ms, q, stim, session_id="00000000-0000-4000-8000-000000000002")
     json.dumps(batch, allow_nan=False)                          # API-safe JSON
+
+
+def test_wrong_size_memory_recovers():
+    """Real LPW video: early mistakes taught the size prior a wrong pupil size and it then
+    rejected the true pupil for the whole recording. It must re-acquire within a few frames."""
+    cam, rng, det = EyeCamera(), np.random.default_rng(10), PupilDetector()
+    det.recent_major = [20.0] * 15                    # poisoned memory (true pupil ~54 px)
+    oks = [det.detect(render(cam, EyeState(0, 0, 6.0), rng)[0]).ok for _ in range(6)]
+    assert any(oks[:4]) and all(oks[4:])
