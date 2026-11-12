@@ -13,6 +13,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "jsonschema>=4.21"]
+nn = ["torch>=2.2"]   # neural pupil detector (eyetrack.nearir.nn_*)
 
 [project.scripts]
 eyetrack = "eyetrack.cli:main"

@@ -238,6 +238,29 @@ class PupilDetector:
         self.prev = res
         return res
 
+    def refine_near(self, gray: np.ndarray, cx: float, cy: float, radius: float) -> Pupil:
+        """Classic ellipse fit restricted to candidates near a given point (e.g. the
+        neural network's guess). Used by the hybrid detector: the network decides WHERE,
+        the ellipse fit adds sub-pixel precision and the pupil size."""
+        cfg = self.cfg
+        if gray.ndim == 3:
+            gray = cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY)
+        blur = cv2.GaussianBlur(gray, (5, 5), 0)
+        best = None
+        for _, m, bb, contrast in self._candidates(blur):
+            bx, by = bb[0] + bb[2] / 2, bb[1] + bb[3] / 2
+            if math.hypot(bx - cx, by - cy) > radius:
+                continue
+            f = self._refine(blur, m, bb)
+            if f and math.hypot(f[0] - cx, f[1] - cy) <= radius:
+                conf = f[5] * min(1.0, max(0.0, contrast) / cfg.min_contrast)
+                if best is None or conf > best[5]:
+                    best = f[:5] + (conf,)
+        if best is None:
+            return Pupil(False)
+        return Pupil(ok=best[5] >= cfg.min_confidence, cx=best[0], cy=best[1], major=best[2],
+                     minor=best[3], angle=best[4], confidence=best[5])
+
     def reset(self) -> None:
         """Forget temporal state (new recording / independent images)."""
         self.prev, self.recent_major, self.prior_rejects = None, [], 0
