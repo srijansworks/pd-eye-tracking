@@ -23,13 +23,40 @@ from .pupil import PupilDetector, PupilDetectorConfig
 
 
 class NearIRTracker:
-    def __init__(self, cfg: PupilDetectorConfig | None = None):
+    """method:
+      'classic' - hand-built dark-pupil detector (no extra dependencies)
+      'hybrid'  - neural network finds the pupil, classic ellipse fit refines it (needs torch
+                  + models/pupilnet.pt); falls back to the network's centre if the fit fails
+      'nn'      - neural network centre only (no pupil size)
+    """
+
+    def __init__(self, cfg: PupilDetectorConfig | None = None, method: str = "classic",
+                 nn_min_conf: float = 0.3):
         self.det = PupilDetector(cfg)
+        self.method = method
+        self.nn_min_conf = nn_min_conf
+        self.net = None
+        if method in ("nn", "hybrid"):
+            from .nn_model import PupilNet
+            self.net = PupilNet()
+
+    def _detect(self, gray: np.ndarray):
+        from .pupil import Pupil
+        if self.net is None:
+            return self.det.detect(gray)
+        nx, ny, nconf = self.net.predict(gray)
+        if nconf < self.nn_min_conf:
+            return Pupil(False, confidence=nconf)
+        if self.method == "hybrid":
+            r = self.det.refine_near(gray, nx, ny, radius=0.025 * gray.shape[1])
+            if r.ok:
+                return r
+        return Pupil(True, cx=nx, cy=ny, confidence=nconf)   # centre only; size unknown
 
     def process(self, image: np.ndarray, t_seconds: float) -> EyeFrame:
         gray = image if image.ndim == 2 else cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         h_img, w_img = gray.shape
-        p = self.det.detect(gray)
+        p = self._detect(gray)
         bright = float(gray.mean())
         if not p.ok:
             # The camera frame itself is fine (frame_ok) but no pupil is visible.
