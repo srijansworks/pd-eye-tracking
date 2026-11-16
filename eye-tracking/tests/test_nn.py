@@ -61,3 +61,21 @@ def test_hybrid_tracker_is_subpixel_on_synthetic_glasses_frames():
         ef = trk.process(img, i / 120)
         errs.append(np.hypot(ef.h * cam.width + cam.width / 2 - tr["cx"], ef.v * cam.width + cam.height / 2 - tr["cy"]))
     assert np.median(errs) < 0.3 and np.max(errs) < 2.0
+
+
+def test_fast_tracker_skips_the_network_and_stays_accurate():
+    """'fast' must match hybrid accuracy on smooth motion while running the network only on re-acquisition frames."""
+    import math
+    from eyetrack.nearir.render import EyeCamera, EyeState, render
+    from eyetrack.nearir.tracker import NearIRTracker
+    cam, rng, trk = EyeCamera(), np.random.default_rng(6), NearIRTracker(method="fast", nn_every=30)
+    calls = {"n": 0}
+    real = trk.net.predict
+    trk.net.predict = lambda g: (calls.__setitem__("n", calls["n"] + 1), real(g))[1]
+    errs = []
+    for i in range(120):
+        img, tr = render(cam, EyeState(10 * math.sin(2 * math.pi * 0.4 * i / 120), 0.0, 4.0), rng)
+        ef = trk.process(img, i / 120)
+        errs.append(np.hypot(ef.h * cam.width + cam.width / 2 - tr["cx"], ef.v * cam.width + cam.height / 2 - tr["cy"]))
+    assert calls["n"] <= 8                      # 120 frames / 30 + the first frame, never every frame
+    assert np.median(errs) < 0.3 and np.max(errs) < 2.0

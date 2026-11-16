@@ -30,7 +30,8 @@ class Frame:
 
 
 class Camera:
-    def __init__(self, index: int = 0, width: int = 1280, height: int = 720, fps: int = 60):
+    def __init__(self, index: int = 0, width: int = 1280, height: int = 720, fps: int = 60,
+                 fourcc: str | None = None, manual_exposure: bool = False):
         backend = cv2.CAP_AVFOUNDATION if platform.system() == "Darwin" else cv2.CAP_ANY
         self.cap = cv2.VideoCapture(index, backend)
         if not self.cap.isOpened():
@@ -38,6 +39,10 @@ class Camera:
                 f"Could not open camera {index}. On macOS, allow camera access for your "
                 "terminal app in System Settings > Privacy & Security > Camera."
             )
+        if fourcc:   # UVC cameras only reach 120 fps in MJPG; the default YUY2 mode is ~10 fps at full size
+            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fourcc))
+        if manual_exposure:   # auto-exposure changes brightness and frame rate mid-recording
+            self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)   # 1 = manual on V4L2/UVC; ignored by AVFoundation
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         self.cap.set(cv2.CAP_PROP_FPS, fps)  # a request; the camera may ignore it

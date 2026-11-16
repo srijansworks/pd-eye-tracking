@@ -78,9 +78,20 @@ Validation people (used to pick the model) reached 93.9%; the held-out group is 
 The hybrid also works on the synthetic glasses camera it never trained on (median 0.05 px).
 Model card and license (CC BY-NC 3.0, inherited from LPW): `eye-tracking/models/MODEL_CARD.md`.
 
+### Real-time speed (2026-11-16)
+`--ir-method fast`: the network runs only every 30 frames or when tracking is lost; in between the ellipse fit
+tracks inside a small crop around the last pupil. Hybrid itself also got faster (crop instead of full-frame search).
+| Test | classic | hybrid | **fast** |
+|---|---|---|---|
+| Synthetic glasses camera, 320×240, median / p95 ms | 4.5 / 4.8 | 9.0 / 12.8 | **2.3 / 9.1** (5.5% of frames over the 8.3 ms budget) |
+| LPW held-out people, every frame (hard real eyes), within 5 px | n/a | 67.9% | 68.1%; mean 7.0 ms, 26% of frames over 8.3 ms |
+Hard LPW videos (glasses frames) make the ellipse fit fail often, so the network runs nearly every frame there.
+Timings were taken on a busy machine (other processes at 50–100% CPU), so treat them as upper bounds.
+Reproduce: `cd eye-tracking && .venv/bin/python -m eyetrack.nearir.eval_tracker --data ../data/lpw --methods hybrid fast --max-frames 300`.
+Glasses hardware plan, camera choice, power, heat and CAD: [GLASSES_HARDWARE.md](GLASSES_HARDWARE.md).
+
 ## Next steps, in priority order
-1. **Speed up the hybrid for live 120 fps** (now ~16 ms/frame): run the network every few frames and
-   track between, or convert it to Core ML. Recording now and analysing afterwards already works.
+1. ~~Speed up the hybrid for live 120 fps~~ done for the laptop (above). Still open: a Raspberry Pi 5 path (network in a thread or ONNX).
 2. **First glasses prototype → `eyetrack record --camera-type ir`** (protocol `eye_v3` with the light reflex).
 3. **Wrist band prototype → same upload format** (`docs/DATA_FORMAT.md`), with the sync tap.
 4. **Paired pilot data:** each volunteer wears both sensors in one session. Only this can show whether fusion helps.

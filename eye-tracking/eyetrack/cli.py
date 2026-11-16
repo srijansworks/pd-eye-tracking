@@ -126,7 +126,7 @@ def main(argv: list[str] | None = None) -> None:
     g.add_argument("--session-id"); g.add_argument("--participant", help="participant code, creates a session")
 
     for sp in (c, r, v):
-        sp.add_argument("--ir-method", choices=["classic", "hybrid", "nn"], default="classic",
+        sp.add_argument("--ir-method", choices=["classic", "hybrid", "nn", "fast"], default="classic",
                         help="IR pupil detector: classic, or hybrid = neural network + ellipse fit "
                              "(best on real eyes; needs torch and models/pupilnet.pt)")
     args = p.parse_args(argv)

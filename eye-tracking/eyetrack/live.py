@@ -78,9 +78,16 @@ def make_tracker(camera_type: str = "webcam"):
     return EyeLandmarker()
 
 
+def open_camera(index: int, camera_type: str) -> Camera:
+    """Glasses camera: 800x600 (4:3, what the pupil network was trained on) at 120 fps MJPG, fixed exposure."""
+    if camera_type == "ir":
+        return Camera(index, 800, 600, 120, fourcc="MJPG", manual_exposure=True).start()
+    return Camera(index).start()
+
+
 def check_camera(index: int = 0, seconds: float = 10.0, show: bool = True, camera_type: str = "webcam") -> dict:
     """Run face/iris tracking for a few seconds and report whether the setup is usable."""
-    cam = Camera(index).start()
+    cam = open_camera(index, camera_type)
     lm = make_tracker(camera_type)
     rows, t_start = [], time.monotonic()
     try:
@@ -156,7 +163,7 @@ def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
            participant_label: str = "", camera_type: str = "webcam", mm_per_px: float | None = None) -> Recording:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    cam = Camera(index).start()
+    cam = open_camera(index, camera_type)
     lm = make_tracker(camera_type)
 
     cv2.namedWindow(WIN, cv2.WND_PROP_FULLSCREEN)

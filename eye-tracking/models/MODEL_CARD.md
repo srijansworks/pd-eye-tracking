@@ -9,8 +9,8 @@
   A commercial product would need a model retrained on our own (consented) data.
 - **Held-out test (4 unseen people, 2,400 frames), within 5 px at 640×480:** classic 45.7%,
   network 59.8%, **hybrid 65.5%** (within 10 px: 48.8% / 79.0% / 79.5%). Validation people: 93.9%.
-- **Known weaknesses:** washed-out pupils behind glasses frames, heavy blur. About 16 ms/frame (hybrid) on an
-  8 GB Apple-chip laptop, which isn't yet real-time at 120 fps.
+- **Known weaknesses:** washed-out pupils behind glasses frames, heavy blur. The network takes about 4.5 ms/frame on an
+  Apple-chip laptop GPU. Use `--ir-method fast` for 120 fps: median 2.3 ms/frame on the synthetic glasses camera (see docs/PRODUCT_ROADMAP.md).
 - **Not a medical device.** Measures pupil position only; says nothing about any disease.
 - Reproduce: `python -m eyetrack.nearir.nn_data --data ../data/lpw --out ../data/lpw_cache`, then
   `PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.45 PYTORCH_MPS_LOW_WATERMARK_RATIO=0.35 python -m eyetrack.nearir.nn_train --cache ../data/lpw_cache --epochs 4 --bs 32 --lr 1.5e-3`

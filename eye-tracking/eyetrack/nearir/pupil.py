@@ -105,7 +105,9 @@ class PupilDetector:
         max_area = math.pi * (cfg.max_diameter_px / 2) ** 2
         k_open = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5) if W < 400 else (7, 7))
         k_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
-        darkest = float(np.percentile(blur, 0.2))
+        # 0.2th percentile from a 256-bin histogram (np.percentile partitions the whole array: 0.6 ms).
+        hist = cv2.calcHist([blur], [0], None, [256], [0, 256]).ravel()
+        darkest = float(np.searchsorted(np.cumsum(hist), 0.002 * blur.size))
         out = []
         for margin in (cfg.dark_margin * 0.7, cfg.dark_margin, cfg.dark_margin * 1.6, cfg.dark_margin * 2.4):
             mask = (blur < darkest + margin).astype(np.uint8)
@@ -169,7 +171,7 @@ class PupilDetector:
         if len(pts) < 6:
             return None
         best_e, best_inl = None, None
-        for _ in range(cfg.ransac_iters):
+        for it in range(cfg.ransac_iters):
             sample = pts[self.rng.choice(len(pts), 5, replace=False)]
             try:
                 e = cv2.fitEllipse(sample)
@@ -181,6 +183,8 @@ class PupilDetector:
             inl = _ellipse_residual(pts, e) < cfg.inlier_px
             if best_inl is None or inl.sum() > best_inl.sum():
                 best_e, best_inl = e, inl
+                if it >= 10 and inl.sum() >= 0.9 * len(pts):     # clean outline: more samples can't help
+                    break
         if best_e is None or best_inl.sum() < 6:
             return None
         e = cv2.fitEllipse(pts[best_inl])
@@ -238,14 +242,23 @@ class PupilDetector:
         self.prev = res
         return res
 
-    def refine_near(self, gray: np.ndarray, cx: float, cy: float, radius: float) -> Pupil:
+    def refine_near(self, gray: np.ndarray, cx: float, cy: float, radius: float,
+                    crop_half: int | None = None) -> Pupil:
         """Classic ellipse fit restricted to candidates near a given point (e.g. the
         neural network's guess). Used by the hybrid detector: the network decides WHERE,
         the ellipse fit adds sub-pixel precision and the pupil size."""
         cfg = self.cfg
         if gray.ndim == 3:
             gray = cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY)
-        blur = cv2.GaussianBlur(gray, (5, 5), 0)
+        # Work on a crop around the guess: the full-frame threshold/morphology passes were
+        # ~60% of the hybrid's cost, and everything outside the crop is rejected anyway.
+        # The crop must hold the pupil, a ring of iris for the contrast check, and the radius.
+        half = crop_half or int(radius + cfg.max_diameter_px * 0.75 + 10)
+        x0, y0 = max(0, int(cx) - half), max(0, int(cy) - half)
+        x1, y1 = min(gray.shape[1], int(cx) + half), min(gray.shape[0], int(cy) + half)
+        crop = gray[y0:y1, x0:x1]
+        cx, cy = cx - x0, cy - y0
+        blur = cv2.GaussianBlur(crop, (5, 5), 0)
         best = None
         for _, m, bb, contrast in self._candidates(blur):
             bx, by = bb[0] + bb[2] / 2, bb[1] + bb[3] / 2
@@ -258,7 +271,7 @@ class PupilDetector:
                     best = f[:5] + (conf,)
         if best is None:
             return Pupil(False)
-        return Pupil(ok=best[5] >= cfg.min_confidence, cx=best[0], cy=best[1], major=best[2],
+        return Pupil(ok=best[5] >= cfg.min_confidence, cx=best[0] + x0, cy=best[1] + y0, major=best[2],
                      minor=best[3], angle=best[4], confidence=best[5])
 
     def reset(self) -> None:
