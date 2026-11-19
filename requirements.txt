@@ -4,5 +4,6 @@ packaging==26.3
 pluggy==1.7.0
 Pygments==2.21.0
 pytest==9.2.0
--e ./eye-tracking
+# dev: jsonschema (batch-format test); nn: torch (--ir-method hybrid/nn/fast, ~700 MB)
+-e ./eye-tracking[dev,nn]
 -e ./ml
