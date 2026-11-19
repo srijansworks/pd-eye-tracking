@@ -102,6 +102,8 @@ def main(argv: list[str] | None = None) -> None:
                    help="physical width of the visible screen area")
     r.add_argument("--distance-cm", type=float, default=55.0, help="eye-to-screen distance")
     r.add_argument("--seed", type=int, default=0)
+    r.add_argument("--protocol", choices=["eye_v1", "eye_v2", "eye_v3", "eye_v4"],
+                   help="default: eye_v4 (antisaccade + light reflex) with --camera-type ir, else eye_v2")
     r.add_argument("--label", default="", help="pseudonymous label only — never a real name")
     r.add_argument("--save-video", action="store_true")
     r.add_argument("--consent-confirmed", action="store_true",
@@ -117,6 +119,7 @@ def main(argv: list[str] | None = None) -> None:
     sg = sub.add_parser("simulate-glasses", help="synthetic near-eye IR recording through the real pupil detector")
     sg.add_argument("--out", required=True); sg.add_argument("--fps", type=float, default=120)
     sg.add_argument("--seed", type=int, default=1)
+    sg.add_argument("--protocol", default="eye_v4", choices=["eye_v2", "eye_v3", "eye_v4"])
     s = sub.add_parser("simulate"); s.add_argument("--out", required=True)
     s.add_argument("--fps", type=float, default=30); s.add_argument("--noise-deg", type=float, default=0.4)
     s.add_argument("--seed", type=int, default=1)
@@ -146,17 +149,17 @@ def main(argv: list[str] | None = None) -> None:
             sys.exit("--save-video requires --consent-confirmed (raw facial video is identifiable).")
         from .live import record
         record(args.out, args.camera, args.screen_width_cm, args.distance_cm, args.seed,
-               args.save_video, args.label, camera_type=args.camera_type, mm_per_px=args.mm_per_px)
+               args.save_video, args.label, camera_type=args.camera_type, mm_per_px=args.mm_per_px, protocol=args.protocol)
         analyze(args.out)
     elif args.cmd == "analyze":
         analyze(args.dir, args.session_id)
     elif args.cmd == "video":
         from .live import process_video
-        process_video(args.file, args.out, camera_type=args.camera_type, mm_per_px=args.mm_per_px)
+        process_video(args.file, args.out, camera_type=args.camera_type, mm_per_px=args.mm_per_px, protocol=args.protocol)
         analyze(args.out)
     elif args.cmd == "simulate-glasses":
         from .nearir.simulate import simulate_ir
-        rec, stim, truth = simulate_ir(fps=args.fps, seed=args.seed)
+        rec, stim, truth = simulate_ir(fps=args.fps, seed=args.seed, protocol=args.protocol)
         rec.save(args.out)
         Path(args.out, "truth.json").write_text(json.dumps(truth, indent=2))
         analyze(args.out)

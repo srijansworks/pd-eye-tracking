@@ -32,7 +32,7 @@ def plot_recording(rec: Recording, out_png: str | Path, stim_events: list[dict] 
     # Shade protocol segments
     tasks = rec["task"]
     for task, color in [("calibration", "#eee"), ("fixation", "#e6f2ff"),
-                        ("prosaccade", "#fff3e0"), ("pursuit", "#e8f5e9")]:
+                        ("prosaccade", "#fff3e0"), ("antisaccade", "#fde8f0"), ("pursuit", "#e8f5e9")]:
         m = tasks == task
         if m.any():
             for a in axes:

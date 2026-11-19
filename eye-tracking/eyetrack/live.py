@@ -17,7 +17,7 @@ import numpy as np
 from .camera import Camera
 from .landmarks import EyeLandmarker, draw_overlay
 from .recording import Recording
-from .stimulus import ScreenGeometry, eye_v2, eye_v3, render
+from .stimulus import PROTOCOLS, ScreenGeometry, render
 
 WIN = "eyetrack"
 
@@ -160,7 +160,8 @@ def check_camera(index: int = 0, seconds: float = 10.0, show: bool = True, camer
 
 def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
            distance_cm: float = 55.0, seed: int = 0, save_video: bool = False,
-           participant_label: str = "", camera_type: str = "webcam", mm_per_px: float | None = None) -> Recording:
+           participant_label: str = "", camera_type: str = "webcam", mm_per_px: float | None = None,
+           protocol: str | None = None) -> Recording:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     cam = open_camera(index, camera_type)
@@ -174,7 +175,8 @@ def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
         w, h = 1440, 900
     geom = ScreenGeometry(w, h, screen_width_cm, distance_cm)
     mx, my = geom.max_deg()
-    make_proto = eye_v3 if camera_type == "ir" else eye_v2   # light reflex needs the IR pupil camera
+    # Default: IR glasses get the full protocol (antisaccade + light reflex); the webcam gets eye_v2.
+    make_proto = PROTOCOLS[protocol or ("eye_v4" if camera_type == "ir" else "eye_v2")]
     proto = make_proto(amp_x=min(10.0, mx - 2), amp_y=min(7.0, my - 2), seed=seed)
 
     writer = None
@@ -224,9 +226,9 @@ def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
             if seg is None:
                 break
             tx, ty = seg.target(tl)
-            msg = ("Head moved - please return to your starting position" if guard.warning else "")
+            msg = ("Head moved - please return to your starting position" if guard.warning else seg.banner)
             lit = seg.light(tl)
-            cv2.imshow(WIN, render(geom, tx, ty, msg, text_color=(0, 200, 255), light=lit))
+            cv2.imshow(WIN, render(geom, tx, ty, msg, text_color=(0, 200, 255), light=lit, dot_color=seg.dot_color))
             if (cv2.waitKey(1) & 0xFF) == 27:
                 raise KeyboardInterrupt
             t_disp = time.monotonic() - t_start

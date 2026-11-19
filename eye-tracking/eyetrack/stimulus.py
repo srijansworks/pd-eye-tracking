@@ -36,6 +36,8 @@ class Segment:
     steps: list[tuple[float, float, float]] = field(default_factory=list)  # (t_local, x_deg, y_deg)
     pursuit: tuple[float, float] | None = None  # (amplitude_deg, freq_hz) for sinusoidal motion
     flashes: list[tuple[float, float]] = field(default_factory=list)  # (t_on, duration): white screen
+    dot_color: tuple[int, int, int] | None = None   # BGR; antisaccade uses red so the rule is visible
+    banner: str = ""                                 # instruction text shown while the segment runs
 
     def light(self, t_local: float) -> bool:
         return any(t0 <= t_local < t0 + d for t0, d in self.flashes)
@@ -136,7 +138,8 @@ class ScreenGeometry:
 
 
 def render(geom: ScreenGeometry, x_deg: float | None, y_deg: float | None, text: str = "",
-           text_color: tuple[int, int, int] = (160, 160, 160), light: bool = False) -> np.ndarray:
+           text_color: tuple[int, int, int] = (160, 160, 160), light: bool = False,
+           dot_color: tuple[int, int, int] | None = None) -> np.ndarray:
     import cv2
 
     img = np.full((geom.height_px, geom.width_px, 3), 255 if light else 0, np.uint8)
@@ -144,7 +147,7 @@ def render(geom: ScreenGeometry, x_deg: float | None, y_deg: float | None, text:
         x, y = geom.deg_to_px(x_deg, y_deg)
         r = max(6, int(0.3 * geom.px_per_cm))       # ~0.6 cm dot
         dot, mark = ((0, 0, 0), (255, 255, 255)) if light else ((255, 255, 255), (0, 0, 0))
-        cv2.circle(img, (x, y), r, dot, -1)
+        cv2.circle(img, (x, y), r, dot_color or dot, -1)
         cv2.circle(img, (x, y), max(2, r // 4), mark, -1)  # centre mark helps precise fixation
     if text:
         cv2.putText(img, text, (30, geom.height_px - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, text_color, 2)
@@ -178,4 +181,37 @@ def eye_v3(amp_x: float = 10.0, amp_y: float = 7.0, n_trials: int = 20, seed: in
     return Protocol("eye_v3", v2.segments + [plr])
 
 
-PROTOCOLS = {"eye_v1": eye_v1, "eye_v2": eye_v2, "eye_v3": eye_v3}
+RED = (0, 0, 255)   # BGR
+
+
+def antisaccade_segments(amp_x: float = 10.0, n_trials: int = 20, seed: int = 0) -> list[Segment]:
+    """Instruction screen + antisaccade block.
+
+    A RED dot sits at the centre, then jumps left or right. The person must look to the
+    MIRROR side (same distance, opposite direction), not at the dot. Looking at the dot is a
+    direction error. Parkinson's raises the error rate and the latency of correct trials
+    (Waldthaler 2021 meta-analysis: error rate 34% vs 19%). Own rng stream (seed + 1), so the
+    prosaccade trials of the same protocol seed are unchanged.
+    """
+    rng = random.Random(seed + 1)
+    steps, t = [], 0.0
+    for _ in range(n_trials):
+        steps.append((t, 0.0, 0.0))
+        t += rng.uniform(1.0, 2.0)
+        steps.append((t, rng.choice([-amp_x, amp_x]), 0.0))
+        t += 1.2
+    intro = Segment("instruction", 4.0, [(0.0, 0.0, 0.0)], dot_color=RED,
+                    banner="NEXT: when the RED dot jumps, look the OPPOSITE way (mirror side)")
+    anti = Segment("antisaccade", t, steps, dot_color=RED, banner="Look AWAY from the red dot")
+    return [intro, anti]
+
+
+def eye_v4(amp_x: float = 10.0, amp_y: float = 7.0, n_trials: int = 20, seed: int = 0) -> Protocol:
+    """eye_v3 + an ANTISACCADE block (~3 min total): ... prosaccade, drift check, antisaccade, drift check, pursuit, light reflex."""
+    v3 = eye_v3(amp_x, amp_y, n_trials, seed)
+    *head, pursuit, plr = v3.segments            # head ends with the drift check before pursuit
+    return Protocol("eye_v4", head + antisaccade_segments(amp_x, n_trials, seed)
+                    + [_drift_check(amp_x), pursuit, plr])
+
+
+PROTOCOLS = {"eye_v1": eye_v1, "eye_v2": eye_v2, "eye_v3": eye_v3, "eye_v4": eye_v4}

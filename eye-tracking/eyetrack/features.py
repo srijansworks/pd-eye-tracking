@@ -126,7 +126,7 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
     tasks_arr = rec["task"]
     q["head_drift_deg"] = {}
     has_pose = bool(np.isfinite(rec["pitch"]).any())   # no head pose from a head-mounted camera
-    for task in ("fixation", "prosaccade", "pursuit"):
+    for task in ("fixation", "prosaccade", "antisaccade", "pursuit"):
         tm = rec.task_mask(task) & okf
         task_flags[task], task_conf[task] = [], 1.0
         if tm.sum() <= 10 or not has_pose:
@@ -250,6 +250,46 @@ def compute(rec: Recording, stim_events: list[dict]) -> tuple[list[dict], dict]:
                           cover, base_flags, n_trials=len(gain)))
         out.append(_m("saccade_direction_error_rate", errors / len(trials), "ratio", "prosaccade",
                       valid, base_flags, n_trials=len(trials)))
+
+    # ---- Antisaccade task (eye_v4): direction errors, latency, error correction ----
+    # Cue = red dot jumps to +-A deg; the correct response is a saccade to the MIRROR side.
+    # A first saccade toward the cue is a direction error. A trial with no saccade in the
+    # window is invalid (not counted as correct or wrong).
+    a_trials = [e for e in stim_events if e["task"] == "antisaccade" and e["kind"] == "target_step"
+                and e["x_deg"] != 0]
+    if a_trials:
+        a_lat, a_gain, n_valid, n_err, n_fixed = [], [], 0, 0, 0
+        for e in a_trials:
+            cue = np.sign(e["x_deg"])
+            win = [s for s in sacc if e["t"] + 0.08 <= s.t_start <= e["t"] + 1.0]
+            if not win:
+                continue
+            n_valid += 1
+            side = lambda sc: (np.sign(sc.dx) if cal else -np.sign(sc.dx))    # same sign convention as prosaccade
+            if side(win[0]) == cue:                                            # looked AT the cue
+                n_err += 1
+                n_fixed += any(side(sc) == -cue for sc in win[1:])             # later looked to the right side
+            else:
+                a_lat.append(win[0].t_start - e["t"])
+                if cal:
+                    a_gain.append(abs(win[0].dx) / abs(e["x_deg"]))
+        if n_valid:
+            cover = n_valid / len(a_trials)
+            few = ["few_trials"] if n_valid < 10 else []
+            out.append(_m("antisaccade_error_rate", n_err / n_valid, "ratio", "antisaccade", cover * valid,
+                          base_flags + few, n_trials=n_valid, n_errors=n_err,
+                          note="Share of valid trials whose first saccade went toward the cue."))
+            if a_lat:
+                out.append(_m("antisaccade_latency_median", 1000 * np.median(a_lat), "ms", "antisaccade",
+                              cover * timing_factor, base_flags + timing_flags + few, n_trials=len(a_lat),
+                              resolution_ms=round(1000 / fps, 1),
+                              note="Correct trials only. Includes a constant camera/display delay."))
+            if a_gain:
+                out.append(_m("antisaccade_gain_median", np.median(a_gain), "ratio", "antisaccade", cover,
+                              base_flags + few, n_trials=len(a_gain)))
+            if n_err:
+                out.append(_m("antisaccade_error_correction_rate", n_fixed / n_err, "ratio", "antisaccade",
+                              cover * min(1.0, n_err / 5), base_flags + ["few_errors"] * (n_err < 5), n_errors=n_err))
 
     # ---- Pursuit task: gain, phase lag, catch-up saccades ------------
     starts = [e for e in stim_events if e["task"] == "pursuit" and e["kind"] == "pursuit_start"]

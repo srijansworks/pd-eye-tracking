@@ -62,6 +62,8 @@ Eye (implemented): `blink_rate`, `blink_duration_mean`, `fixation_bcea_68`, `fix
 `saccade_latency_median`, `saccade_latency_sd`, `saccade_amplitude_median`,
 `saccade_peak_velocity_median`, `saccade_gain_median`, `saccade_direction_error_rate`,
 `pursuit_velocity_gain`, `pursuit_position_gain`, `pursuit_phase_lag`, `pursuit_catchup_saccade_rate`,
+`antisaccade_error_rate`, `antisaccade_latency_median`, `antisaccade_gain_median`, `antisaccade_error_correction_rate`,
+`pupil_found_fraction`, `pupil_diameter_median`, `pupil_diameter_cv`, `plr_constriction_amplitude`, `plr_latency`, `plr_max_constriction_velocity`,
 `valid_frame_fraction`, `effective_fps`, `iris_diameter_px`, `calibration_rmse`, `calibration_rmse_x`, `calibration_rmse_y`, `calibration_scale_drift_max`.
 
 Wrist / gait: add your names here in a pull request **before** you start uploading, so the

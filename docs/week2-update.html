@@ -1,0 +1,189 @@
+<title>Conrad Week 2 Update</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: one calm column, plain-language sections, a single comparison chart, a "needs you" checklist at the end. */
+:root{
+  --bg:#f6f7f5; --surface:#ffffff; --fg:#1b2420; --muted:#5d6b65; --line:#dfe4e0;
+  --accent:#0f7a6b; --accent-soft:#dcefe9; --need:#c2410c; --need-soft:#fbe9df; --wait:#8a6d00; --wait-soft:#f6efd0;
+  --bar:#9fb3ab; --bar-hi:#0f7a6b;
+  --f-body:"Inter",system-ui,sans-serif; --f-head:"Space Grotesk","Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1512; --surface:#171f1b; --fg:#e8efeb; --muted:#9aaba3; --line:#2a352f;
+  --accent:#4fc7b2; --accent-soft:#16312c; --need:#ff9a63; --need-soft:#3a2418; --wait:#e8c75a; --wait-soft:#33290f;
+  --bar:#4a5c54; --bar-hi:#4fc7b2; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1512; --surface:#171f1b; --fg:#e8efeb; --muted:#9aaba3; --line:#2a352f;
+  --accent:#4fc7b2; --accent-soft:#16312c; --need:#ff9a63; --need-soft:#3a2418; --wait:#e8c75a; --wait-soft:#33290f;
+  --bar:#4a5c54; --bar-hi:#4fc7b2; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{font-family:var(--f-head);line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:clamp(1.9rem,5vw,2.6rem);letter-spacing:-.01em}
+h2{font-size:1.4rem}
+h3{font-size:1.05rem}
+p{margin:0}
+.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.lead{font-size:1.15rem;max-width:62ch}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+.muted{color:var(--muted)}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.flow div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:.93rem;min-width:0}
+.flow b{display:block;font-family:var(--f-head);margin-bottom:2px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.big{font-family:var(--f-head);font-size:1.9rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent)}
+.pill{display:inline-block;font-size:.74rem;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.done{background:var(--accent-soft);color:var(--accent)}
+.waiting{background:var(--wait-soft);color:var(--wait)}
+.you{background:var(--need-soft);color:var(--need)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.93rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.76rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.chart{display:flex;flex-direction:column;gap:12px}
+.row{display:grid;grid-template-columns:minmax(120px,38%) 1fr;gap:12px;align-items:center}
+.row .lab{font-size:.9rem;min-width:0}
+.track{position:relative;height:26px;background:var(--line);border-radius:6px}
+.fill{position:absolute;inset:0 auto 0 0;background:var(--bar);border-radius:6px}
+.fill.hi{background:var(--bar-hi)}
+.val{position:absolute;right:8px;top:0;line-height:26px;font-size:.84rem;font-weight:600;color:var(--fg);font-variant-numeric:tabular-nums}
+.axis{display:flex;justify-content:space-between;font-size:.76rem;color:var(--muted);margin-left:calc(38% + 12px)}
+.note{border-left:3px solid var(--wait);background:var(--wait-soft);padding:10px 14px;border-radius:0 8px 8px 0;font-size:.93rem}
+.check{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.check li{display:grid;grid-template-columns:auto 1fr;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.check .n{font-family:var(--f-head);font-weight:700;color:var(--need);font-size:1.1rem;font-variant-numeric:tabular-nums}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.84rem;background:var(--accent-soft);color:var(--fg);padding:1px 6px;border-radius:5px;overflow-wrap:anywhere}
+dl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0;font-size:.93rem}
+dt{font-weight:600}dd{margin:0;color:var(--muted)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<main>
+<header style="display:flex;flex-direction:column;gap:12px">
+  <p class="eyebrow">Conrad Challenge · Software team · Nov 18, 2026</p>
+  <h1>Week 2: from separate parts to one answer</h1>
+  <p class="lead">Last week we built the eye tracker and the wrist model. This week we built the missing eye test, taught the system to compare a wearer with published Parkinson's research, and tested on paper whether glasses plus wrist beats wrist alone. The glasses software is now finished on simulated data. Everything after this needs hardware or people.</p>
+</header>
+
+<section>
+  <h2>The product in one picture</h2>
+  <div class="flow">
+    <div><b>Glasses</b>Infrared camera on the eye. Measures eye movements and pupil.</div>
+    <div><b>Wrist band</b>Motion sensor. Measures tremor, left vs right.</div>
+    <div><b>Compare</b>Each number is checked against published Parkinson's and healthy values.</div>
+    <div><b>Combined score</b>One research score from both sensors. Not a diagnosis.</div>
+  </div>
+</section>
+
+<section>
+  <h2>Last week vs this week</h2>
+  <div class="cols">
+    <div class="card">
+      <span class="eyebrow">Last week · Nov 8–14</span>
+      <h3>We built the pieces</h3>
+      <ul>
+        <li>Webcam eye tracking works on 4 recordings of your face.</li>
+        <li>Glasses pupil detector found the pupil in <b>65.5%</b> of frames on real infrared video of people it never saw (the older method: 45.7%).</li>
+        <li>Wrist model on 469 people: <b>0.88</b> for Parkinson's vs healthy, <b>0.72</b> vs look-alike conditions.</li>
+        <li>Database, website and upload working.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="eyebrow">This week · Nov 15–18</span>
+      <h3>We made them answer the question</h3>
+      <ul>
+        <li><b>Real-time mode:</b> median 2.3 ms per frame, the camera needs under 8.3 ms.</li>
+        <li><b>Glasses hardware plan and 3D design:</b> one thin cable, nothing heavy on the face. Not printed yet.</li>
+        <li><b>Antisaccade test (new):</b> look the opposite way from a red dot. Built and tested.</li>
+        <li><b>Published-data comparison (new):</b> scores a wearer against numbers from three research reviews.</li>
+        <li><b>Glasses + wrist study (new):</b> does adding the glasses help? See below.</li>
+        <li>Automated checks: 38 → 43 for the eye code, 8 → 14 for the wrist and comparison code.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Where each part stands</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Part</th><th>Status</th><th>What that means</th></tr></thead>
+    <tbody>
+      <tr><td>Glasses eye-tracking software</td><td><span class="pill done">Done on simulated data</span></td><td>Tracks the pupil, runs every test (looking, following, antisaccade, light reflex). Simulated glasses video gave an antisaccade error rate of 0.15 (true 0.15) and latency 304 ms (true 305 ms).</td></tr>
+      <tr><td>Glasses on a real camera</td><td><span class="pill waiting">Waiting for hardware</span></td><td>Camera not ordered yet. Real-world accuracy is unknown until then.</td></tr>
+      <tr><td>Wrist tremor model</td><td><span class="pill done">Done on public data</span></td><td>Trained and tested honestly on 469 people. No wrist band of our own yet.</td></tr>
+      <tr><td>Compare to published data</td><td><span class="pill done">Built</span></td><td>Antisaccade error rate scores today. Other numbers need healthy volunteers wearing our glasses first.</td></tr>
+      <tr><td>Does glasses + wrist improve accuracy?</td><td><span class="pill waiting">Only simulated</span></td><td>Needs people wearing both sensors in one session.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Does adding the glasses help?</h2>
+  <p>Accuracy below is AUC: 0.5 is a coin flip, 1.0 is perfect. The wrist bar is real data. Every glasses bar is a simulation built from published research, so treat it as a plan, not a result.</p>
+  <div class="chart" role="img" aria-label="Bar chart of AUC. Wrist alone 0.886 real. Glasses alone, error rate only 0.76 simulated. Both, error rate only 0.89 simulated. Glasses alone, full set 0.92 simulated. Both, full set 0.92 simulated.">
+    <div class="row"><div class="lab">Wrist alone <span class="muted">(real people)</span></div><div class="track"><div class="fill hi" style="width:77.2%"></div><span class="val">0.886</span></div></div>
+    <div class="row"><div class="lab">Glasses alone, one test <span class="muted">(simulated)</span></div><div class="track"><div class="fill" style="width:52%"></div><span class="val">0.76</span></div></div>
+    <div class="row"><div class="lab">Wrist + glasses, one test <span class="muted">(simulated)</span></div><div class="track"><div class="fill hi" style="width:78.8%"></div><span class="val">0.89</span></div></div>
+    <div class="row"><div class="lab">Glasses alone, all tests <span class="muted">(simulated)</span></div><div class="track"><div class="fill" style="width:84.8%"></div><span class="val">0.92</span></div></div>
+    <div class="row"><div class="lab">Wrist + glasses, all tests <span class="muted">(simulated)</span></div><div class="track"><div class="fill hi" style="width:84.8%"></div><span class="val">0.92</span></div></div>
+    <div class="axis"><span>0.5 coin flip</span><span>1.0 perfect</span></div>
+  </div>
+  <p><b>Plain reading:</b> bars show the middle case, where the two sensors overlap a little. If they gave fully separate clues, glasses would add about +0.02 (one test) or +0.05 (all tests) over the wrist alone. At the middle case it is +0.01 and +0.04. If both mostly pick up the same severity, the one-test gain disappears. A pilot of 30 patients and 30 healthy people would show a gain in 94% of runs (separate clues), 78% (middle) or 57% (heavy overlap) with one test, and 98–100% with all tests.</p>
+  <p class="note"><b>Why this is optimistic:</b> the simulation ignores camera noise, medication, age matching, and the fact that the research studies disagree with each other. "All tests" also assumes we first measure healthy volunteers on our own glasses.</p>
+</section>
+
+<section>
+  <h2>Can it tell if the wearer has Parkinson's?</h2>
+  <p>Not as a diagnosis. It can say how closely a wearer's numbers match published Parkinson's groups versus published healthy groups, then merge that with the wrist score. Published values it uses:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Measure</th><th>Healthy</th><th>Parkinson's</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>Antisaccade error rate (looks at the dot instead of away)</td><td>19%</td><td>34%</td><td>Waldthaler 2021, 39 studies</td></tr>
+      <tr><td>Antisaccade reaction time</td><td>369 ms</td><td>412 ms</td><td>same paper, 34 studies</td></tr>
+      <tr><td>Pupil light reflex: speed, size, delay</td><td>–</td><td>slower, smaller, later</td><td>2025 review, 9–10 studies</td></tr>
+      <tr><td>Ordinary look-at-the-dot reaction time</td><td>–</td><td>about 19 ms longer</td><td>Chambers 2010, 47 studies</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">The studies disagree a lot and used lab equipment. Reaction times and light-reflex numbers shift with our camera and screen, so they only count once healthy volunteers set our own baseline.</p>
+</section>
+
+<section>
+  <h2>What I need from you</h2>
+  <ol class="check">
+    <li><span class="n">1</span><div><b>Push the code to GitHub.</b> This machine has no GitHub login. Run <code>git push origin main</code> yourself. This week's new work is not committed yet. Also revoke the access token you pasted into an earlier chat.</div></li>
+    <li><span class="n">2</span><div><b>Order the camera and the infrared filter</b> with the hardware team and decide who prints the frame. This is the main thing blocking real results.</div></li>
+    <li><span class="n">3</span><div><b>Find a mentor or qualified adult</b> to approve the infrared LED circuit before anyone wears it.</div></li>
+    <li><span class="n">4</span><div><b>Run the new antisaccade test on your own webcam</b> (about 3 minutes): <code>eyetrack record --protocol eye_v4 --screen-width-cm 30 --out recordings/anti01</code>. It has only run on simulated eyes so far.</div></li>
+    <li><span class="n">5</span><div><b>Recruit 10 to 20 healthy volunteers</b> with a consent form and adult supervision. They set our healthy baseline and become the first paired pilot. No patients until there is proper ethics oversight.</div></li>
+    <li><span class="n">6</span><div><b>Decide who builds the wrist band.</b> We have the data format and a sync-tap step, but no band exists.</div></li>
+    <li><span class="n">7</span><div><b>Team items:</b> read the 7 papers on the shortlist for the Week 1 literature review, finish the competitor review in Notion, find the next Conrad deadline, and confirm whether the submitted Lean Canvas was the Parkinson's idea.</div></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Still open on the software side</h2>
+  <ul style="margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px">
+    <li>Real-camera validation of the pupil tracker (needs the camera).</li>
+    <li>Healthy baseline from our own glasses (needs volunteers).</li>
+    <li>Raspberry Pi path for a cable-free version. Not needed for the tethered first build.</li>
+    <li>No published eye numbers exist for telling Parkinson's from look-alike conditions, so that question stays wrist-only.</li>
+    <li>Gait data not started. Backend still lacks rate limiting and automatic test runs.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Words used here</h2>
+  <dl>
+    <dt>Saccade</dt><dd>A fast eye jump to a new spot.</dd>
+    <dt>Antisaccade</dt><dd>Look the opposite way from a dot. Hard for the brain, and harder with Parkinson's.</dd>
+    <dt>Pupil light reflex</dt><dd>How the pupil shrinks when a light flashes.</dd>
+    <dt>AUC</dt><dd>One number for accuracy. 0.5 is chance, 1.0 is perfect.</dd>
+    <dt>Simulation</dt><dd>A computer-made test with known answers. Good for planning, not proof.</dd>
+  </dl>
+  <p class="muted">Research prototype. Nothing here is clinically validated and nothing here diagnoses Parkinson's disease.</p>
+</section>
+</main>

@@ -1,6 +1,6 @@
 # Product software: where we are and what's next
 
-*Updated 2026-11-11. Research prototype, not a medical device. Every number below is from
+*Updated 2026-11-18. Research prototype, not a medical device. Every number below is from
 synthetic data or from the public PADS dataset, and none is a validated diagnostic accuracy.*
 
 ## The product
@@ -21,6 +21,8 @@ Each sensor gets its own model; a **late-fusion** layer combines whichever senso
 | Webcam eye tracking (interim) | ✅ Working on real faces | 4 real recordings. Latency repeats within ~15 ms. Gain 0.92 after drift-check and smoothing fixes |
 | **Glasses eye tracking (near-eye IR)** | ✅ **Built; tested on synthetic AND real IR eye video (LPW)** | Pupil centre error 0.05 px (open eye); 120 fps simulation: gain 0.949/0.95, pursuit 0.849/0.85, pupil 4.02/4.01 mm, light reflex latency 240/256 ms |
 | Pupillary light reflex test | ✅ In protocol `eye_v3` (screen flashes) | Synthetic: amplitude 27–32% vs ~30% true |
+| **Antisaccade task (protocol `eye_v4`)** | ✅ **Built; tested on synthetic webcam and synthetic glasses video** | 120 fps glasses sim through the real pupil detector: error rate 0.15 vs 0.15 true, latency 304 vs 305 ms, gain 0.95 |
+| **Published-data comparison + glasses/wrist fusion** | ✅ **Code + simulation study** (`docs/PUBLISHED_COMPARISON.md`) | Scores a wearer against published PD/healthy values; fusion gain is a SIMULATION (AUC 0.886 -> 0.90-0.94), needs paired real data |
 | Wrist tremor features | ✅ Built | Recovers tremor frequency ±0.5 Hz on test signals |
 | **Wrist model on real PD data (PADS)** | ✅ **Trained and cross-validated** | See below |
 | Backend (hosted Supabase + API + dashboard) | ✅ Live | Real upload from Srijan's laptop stored |
@@ -92,7 +94,7 @@ Glasses hardware plan, camera choice, power, heat and CAD: [GLASSES_HARDWARE.md]
 
 ## Next steps, in priority order
 1. ~~Speed up the hybrid for live 120 fps~~ done for the laptop (above). Still open: a Raspberry Pi 5 path (network in a thread or ONNX).
-2. **First glasses prototype → `eyetrack record --camera-type ir`** (protocol `eye_v3` with the light reflex).
+2. ~~Antisaccade task~~ done (eye_v4). **First glasses prototype → `eyetrack record --camera-type ir`** (protocol `eye_v3` with the light reflex).
 3. **Wrist band prototype → same upload format** (`docs/DATA_FORMAT.md`), with the sync tap.
 4. **Paired pilot data:** each volunteer wears both sensors in one session. Only this can show whether fusion helps.
    Needs a consent form and adult/mentor supervision. No patients until there's proper ethics oversight.

@@ -32,8 +32,8 @@ Webcam ─▶ eye-tracking/ (Python: MediaPipe iris tracking → eye-movement ev
 - Tests: Python 24 passed (incl. a headless run of the live recording loop); web 21 passed (migrations + RLS + real route handlers against real SQL in PGlite); `next build` and `tsc` clean.
 
 **Not yet done / not verified**
-- Run on a real face 3 times (protocol eye_v1) and end-to-end on local Supabase (Docker) → dashboard. The new eye_v2 protocol has not yet been run on a real face.
-- Pupil diameter (needs an IR camera), antisaccade task, rate limiting, CI.
+- Run on a real face 3 times (protocol eye_v1) and end-to-end on local Supabase (Docker) → dashboard. eye_v2 was run on a real face once (gain 0.92); eye_v3/eye_v4 (light reflex, antisaccade) have only run on synthetic data.
+- A real IR camera run (pupil diameter, light reflex), rate limiting, CI. Antisaccade (eye_v4) and published-data comparison are built; see docs/PUBLISHED_COMPARISON.md.
 
 ## Quick start
 ```bash

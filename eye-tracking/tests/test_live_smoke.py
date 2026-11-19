@@ -67,7 +67,7 @@ def test_record_loop_runs_end_to_end(tmp_path, monkeypatch):
         Segment("drift_check", 0.3, [(0.0, 0, 0), (0.1, -10, 0), (0.2, 10, 0)]),
         Segment("pursuit", 0.4, pursuit=(10, 0.4)),
     ])
-    monkeypatch.setattr(live, "eye_v2", lambda **_k: short)
+    monkeypatch.setitem(live.PROTOCOLS, "eye_v2", lambda **_k: short)
 
     rec = live.record(tmp_path, screen_width_cm=28, distance_cm=50)
 

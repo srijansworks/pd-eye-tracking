@@ -1,0 +1,201 @@
+{
+  "assumptions": {
+    "wrist": "real PADS out-of-fold scores, PD (n=276) vs healthy (n=79)",
+    "eye": "simulated from published distributions (Waldthaler 2021; PLR meta-analysis 2025), scored by eye_score logic",
+    "within_person_eye_marker_correlation": 0.3,
+    "eye_llr_shrink": 0.5,
+    "sensor_correlation_within_class": "rho_ws varied below; real value unknown until paired pilot data exist",
+    "PLR_markers": "assume a perfect healthy reference was measured on our hardware (optimistic)",
+    "not_covered": "PD vs other movement disorders (no published eye distributions for that contrast)"
+  },
+  "expected": {
+    "error_rate_only|rho=0.0": {
+      "auc_wrist": 0.8862305925,
+      "auc_glasses": 0.7612890837499999,
+      "auc_both": 0.90429544,
+      "sens90_wrist": 0.7263,
+      "sens90_both": 0.75135
+    },
+    "error_rate_only|rho=0.3": {
+      "auc_wrist": 0.8860669575,
+      "auc_glasses": 0.760282645,
+      "auc_both": 0.893637405,
+      "sens90_wrist": 0.72715,
+      "sens90_both": 0.7219
+    },
+    "error_rate_only|rho=0.5": {
+      "auc_wrist": 0.8849604725,
+      "auc_glasses": 0.7579452125000001,
+      "auc_both": 0.8854363624999999,
+      "sens90_wrist": 0.7217,
+      "sens90_both": 0.70225
+    },
+    "error_rate+latency+PLR|rho=0.0": {
+      "auc_wrist": 0.885221425,
+      "auc_glasses": 0.9246440800000001,
+      "auc_both": 0.9375250249999999,
+      "sens90_wrist": 0.7209,
+      "sens90_both": 0.8303
+    },
+    "error_rate+latency+PLR|rho=0.3": {
+      "auc_wrist": 0.8852406974999999,
+      "auc_glasses": 0.9243273775,
+      "auc_both": 0.9235814925,
+      "sens90_wrist": 0.7261,
+      "sens90_both": 0.79195
+    },
+    "error_rate+latency+PLR|rho=0.5": {
+      "auc_wrist": 0.88434381,
+      "auc_glasses": 0.9237440699999999,
+      "auc_both": 0.914427515,
+      "sens90_wrist": 0.72135,
+      "sens90_both": 0.7703
+    }
+  },
+  "pilot": {
+    "error_rate_only|rho=0.0|n=15+15": {
+      "mean_auc_gain": 0.020518518518518523,
+      "p_gain_positive": 0.85,
+      "gain_p5_p95": [
+        -0.004444444444444473,
+        0.053333333333333455
+      ]
+    },
+    "error_rate_only|rho=0.0|n=30+30": {
+      "mean_auc_gain": 0.01891111111111112,
+      "p_gain_positive": 0.9433333333333334,
+      "gain_p5_p95": [
+        -5.555555555555195e-05,
+        0.03894444444444453
+      ]
+    },
+    "error_rate_only|rho=0.0|n=60+60": {
+      "mean_auc_gain": 0.017966666666666666,
+      "p_gain_positive": 0.9966666666666667,
+      "gain_p5_p95": [
+        0.006097222222222282,
+        0.030569444444444448
+      ]
+    },
+    "error_rate_only|rho=0.3|n=15+15": {
+      "mean_auc_gain": 0.008103703703703707,
+      "p_gain_positive": 0.62,
+      "gain_p5_p95": [
+        -0.01333333333333342,
+        0.03999999999999993
+      ]
+    },
+    "error_rate_only|rho=0.3|n=30+30": {
+      "mean_auc_gain": 0.008262962962962962,
+      "p_gain_positive": 0.78,
+      "gain_p5_p95": [
+        -0.006666666666666599,
+        0.02444444444444449
+      ]
+    },
+    "error_rate_only|rho=0.3|n=60+60": {
+      "mean_auc_gain": 0.008307407407407413,
+      "p_gain_positive": 0.8933333333333333,
+      "gain_p5_p95": [
+        -0.001958333333333517,
+        0.02084722222222226
+      ]
+    },
+    "error_rate_only|rho=0.5|n=15+15": {
+      "mean_auc_gain": 0.0006370370370370393,
+      "p_gain_positive": 0.42,
+      "gain_p5_p95": [
+        -0.02222222222222215,
+        0.026666666666666616
+      ]
+    },
+    "error_rate_only|rho=0.5|n=30+30": {
+      "mean_auc_gain": 0.002037037037037036,
+      "p_gain_positive": 0.57,
+      "gain_p5_p95": [
+        -0.012277777777777686,
+        0.015555555555555545
+      ]
+    },
+    "error_rate_only|rho=0.5|n=60+60": {
+      "mean_auc_gain": 0.0014583333333333286,
+      "p_gain_positive": 0.5733333333333334,
+      "gain_p5_p95": [
+        -0.00918055555555554,
+        0.012222222222222145
+      ]
+    },
+    "error_rate+latency+PLR|rho=0.0|n=15+15": {
+      "mean_auc_gain": 0.05096296296296295,
+      "p_gain_positive": 0.99,
+      "gain_p5_p95": [
+        0.008888888888888835,
+        0.10688888888888906
+      ]
+    },
+    "error_rate+latency+PLR|rho=0.0|n=30+30": {
+      "mean_auc_gain": 0.05368518518518519,
+      "p_gain_positive": 1.0,
+      "gain_p5_p95": [
+        0.02327777777777776,
+        0.09000000000000008
+      ]
+    },
+    "error_rate+latency+PLR|rho=0.0|n=60+60": {
+      "mean_auc_gain": 0.05198425925925926,
+      "p_gain_positive": 1.0,
+      "gain_p5_p95": [
+        0.029152777777777788,
+        0.07640277777777783
+      ]
+    },
+    "error_rate+latency+PLR|rho=0.3|n=15+15": {
+      "mean_auc_gain": 0.042088888888888905,
+      "p_gain_positive": 0.9666666666666667,
+      "gain_p5_p95": [
+        0.004444444444444473,
+        0.08911111111111139
+      ]
+    },
+    "error_rate+latency+PLR|rho=0.3|n=30+30": {
+      "mean_auc_gain": 0.03826666666666667,
+      "p_gain_positive": 1.0,
+      "gain_p5_p95": [
+        0.012222222222222134,
+        0.06888888888888878
+      ]
+    },
+    "error_rate+latency+PLR|rho=0.3|n=60+60": {
+      "mean_auc_gain": 0.03875925925925926,
+      "p_gain_positive": 1.0,
+      "gain_p5_p95": [
+        0.020527777777777773,
+        0.058430555555555486
+      ]
+    },
+    "error_rate+latency+PLR|rho=0.5|n=15+15": {
+      "mean_auc_gain": 0.03201481481481483,
+      "p_gain_positive": 0.91,
+      "gain_p5_p95": [
+        -0.004444444444444367,
+        0.08022222222222235
+      ]
+    },
+    "error_rate+latency+PLR|rho=0.5|n=30+30": {
+      "mean_auc_gain": 0.02866666666666666,
+      "p_gain_positive": 0.9766666666666667,
+      "gain_p5_p95": [
+        0.0043888888888888155,
+        0.05999999999999984
+      ]
+    },
+    "error_rate+latency+PLR|rho=0.5|n=60+60": {
+      "mean_auc_gain": 0.031076851851851852,
+      "p_gain_positive": 1.0,
+      "gain_p5_p95": [
+        0.014972222222222237,
+        0.04890277777777787
+      ]
+    }
+  }
+}

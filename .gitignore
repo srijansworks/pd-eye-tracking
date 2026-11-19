@@ -26,3 +26,6 @@ web/next-env.d.ts
 *.egg-info/
 supabase/.temp/
 data/
+# per-participant scores derived from PADS (regenerate with pdml.wrist_oof); agent memory
+ml/results/*.npz
+.remember/

@@ -244,3 +244,44 @@ def test_gain_survives_tracker_smoothing():
         ms, _ = features.compute(rec, stim)
         g.append({m["name"]: m["value"] for m in ms}["saccade_gain_median"])
     assert np.mean(g) == pytest.approx(0.95, abs=0.05)
+
+
+# ---------- antisaccade (eye_v4) -------------------------------------------
+def test_eye_v4_adds_antisaccade_without_changing_prosaccade_trials():
+    from eyetrack.stimulus import eye_v2, eye_v4
+    v2, v4 = eye_v2(seed=5), eye_v4(seed=5)
+    tasks = [s.task for s in v4.segments]
+    assert tasks.index("antisaccade") < tasks.index("pursuit") and tasks[-1] == "plr"
+    assert tasks[tasks.index("antisaccade") - 1] == "instruction" and tasks[tasks.index("antisaccade") + 1] == "drift_check"
+    steps = lambda p: [s.steps for s in p.segments if s.task == "prosaccade"]
+    assert steps(v2) == steps(v4)                       # same seed -> same prosaccade trials
+
+
+@pytest.mark.parametrize("err", [0.0, 0.15, 0.35])
+def test_antisaccade_error_rate_and_latency_recovered(err):
+    from eyetrack.stimulus import eye_v4
+    rates, lats = [], []
+    for seed in (1, 2, 3):
+        rec, stim, truth = simulate(fps=120, noise_deg=0.1, protocol=eye_v4(seed=seed), seed=seed, anti_error_rate=err)
+        cal = calibration.fit(rec, stim); calibration.apply(rec, cal)
+        d = {m["name"]: m for m in features.compute(rec, stim)[0]}
+        assert d["antisaccade_error_rate"]["metadata"]["n_trials"] >= 17
+        rates.append(d["antisaccade_error_rate"]["value"] - truth["anti_error_rate"])
+        lats.append(d["antisaccade_latency_median"]["value"] - truth["anti_latency_median_ms"])
+    assert max(abs(r) for r in rates) < 0.1
+    assert max(abs(x) for x in lats) < 25
+    if err == 0.0:
+        assert "antisaccade_error_correction_rate" not in d   # no errors -> nothing to correct
+
+
+def test_antisaccade_is_slower_than_prosaccade_and_valid_batch():
+    from eyetrack.stimulus import eye_v4
+    rec, stim, _ = simulate(fps=120, noise_deg=0.1, protocol=eye_v4(seed=4), seed=4)
+    cal = calibration.fit(rec, stim); calibration.apply(rec, cal)
+    ms, q = features.compute(rec, stim)
+    d = {m["name"]: m["value"] for m in ms}
+    assert d["antisaccade_latency_median"] > d["saccade_latency_median"] + 40     # built-in ~90 ms cost
+    jsonschema = pytest.importorskip("jsonschema")
+    rec.meta["started_at_utc"] = "2026-11-04T20:00:00.000Z"
+    batch = build_batch(rec, ms, q, stim, session_id="00000000-0000-4000-8000-000000000001")
+    jsonschema.validate(batch, json.loads(SCHEMA.read_text()), format_checker=jsonschema.FormatChecker())

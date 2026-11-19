@@ -51,6 +51,21 @@ synthetic test with the same drift, saccade gain reads 0.83 without drift checks
 A **live posture warning** also appears on screen if the head moves > 4° from its pose at the last
 calibration, and the moment is logged as a `posture_warning_start` event.
 
+## Protocol `eye_v4` (~186 s, default with `--camera-type ir`) = eye_v3 + antisaccade
+After the prosaccade trials: a 4 s instruction screen, then 20 trials where a **red** dot sits at the centre and jumps
+to +-10 deg. The person must look to the **mirror** side, not at the dot. A first saccade toward the dot is a
+direction error. A drift check follows, so the antisaccade block is scored with a fresh calibration.
+
+| Measurement | Meaning |
+|---|---|
+| `antisaccade_error_rate` | errors / valid trials (trials with no saccade in 80 ms - 1 s are invalid, not counted) |
+| `antisaccade_latency_median` | correct trials only, ms (includes constant camera + display delay) |
+| `antisaccade_gain_median` | amplitude of the correct saccade / cue distance |
+| `antisaccade_error_correction_rate` | share of errors followed by a saccade to the right side |
+
+Synthetic check (120 fps, 3 seeds each, `tests/test_pipeline.py`): error rate within 0.1 of truth and latency within 25 ms.
+`eyetrack record --camera-type ir` runs eye_v4; `--protocol eye_v2` etc. overrides it. Published comparison: [PUBLISHED_COMPARISON.md](PUBLISHED_COMPARISON.md).
+
 The original `eye_v1` protocol (no drift checks) is kept for comparison.
 
 Stimulus onset times are logged when each frame **reaches the screen**, not when it was scheduled.

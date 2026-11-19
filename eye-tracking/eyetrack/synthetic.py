@@ -54,6 +54,9 @@ def simulate(
     offset_drift_deg: float = 0.0,
     pitch_drift_deg: float = 0.0,
     smoothing_ms: float = 0.0,
+    anti_error_rate: float = 0.12,
+    anti_extra_latency_ms: float = 90.0,
+    anti_correction_rate: float = 0.9,
     return_trajectory: bool = False,
     protocol: Protocol | None = None,
     seed: int = 1,
@@ -68,11 +71,28 @@ def simulate(
     # --- schedule step-driven saccades ---------------------------------
     sched: list[tuple[float, float, float, str]] = []  # (start_t, x_target, y_target, kind)
     truth_lat, truth_pv = [], []
+    anti_lat, anti_n, anti_err = [], 0, 0
     for e in stim:
         if e["kind"] != "target_step" or e["task"] == "pursuit":
             continue
+        if e["task"] == "antisaccade" and e["x_deg"] != 0:
+            # Antisaccade cue: correct = mirror-side saccade, slower; error = fast saccade AT the cue,
+            # usually followed by a corrective saccade to the right side.
+            g = saccade_gain
+            anti_n += 1
+            if rng.random() < anti_error_rate:
+                anti_err += 1
+                lat = max(0.09, rng.normal(0.8 * latency_ms, latency_sd_ms) / 1000)
+                sched.append((e["t"] + lat, e["x_deg"] * g, 0.0, "anti_error"))
+                if rng.random() < anti_correction_rate:
+                    sched.append((e["t"] + lat + 0.18 + rng.uniform(0, 0.1), -e["x_deg"] * g, 0.0, "anti_fix"))
+            else:
+                lat = max(0.12, rng.normal(latency_ms + anti_extra_latency_ms, 1.3 * latency_sd_ms) / 1000)
+                anti_lat.append(lat)
+                sched.append((e["t"] + lat, -e["x_deg"] * g, 0.0, "antisaccade"))
+            continue
         lat = max(0.09, rng.normal(latency_ms, latency_sd_ms) / 1000)
-        g = saccade_gain if e["task"] == "prosaccade" else 1.0
+        g = saccade_gain if e["task"] in ("prosaccade", "antisaccade") else 1.0
         sched.append((e["t"] + lat, e["x_deg"] * g, e["y_deg"] * g, e["task"]))
         if e["task"] == "prosaccade" and e["x_deg"] != 0:
             truth_lat.append(lat)
@@ -196,6 +216,9 @@ def simulate(
         "swj_count": swj_count,
         "n_catchup": n_catchup,
     }
+    if anti_n:
+        truth.update({"anti_n_trials": anti_n, "anti_error_rate": anti_err / anti_n,
+                      "anti_latency_median_ms": float(np.median(anti_lat) * 1000) if anti_lat else float("nan")})
     if return_trajectory:
         # Clean 1 kHz eye trajectory + blink times, used to render near-eye IR video.
         truth["_trajectory"] = (th, gx, gy)
