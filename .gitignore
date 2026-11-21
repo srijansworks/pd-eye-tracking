@@ -14,6 +14,7 @@ eye-tracking/models/*
 !eye-tracking/models/pupilnet.history.json
 !eye-tracking/models/MODEL_CARD.md
 eye-tracking/recordings/
+eye-tracking/results/robustness*.csv
 *.mp4
 *.mov
 *.avi

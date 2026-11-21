@@ -129,7 +129,8 @@ def check_camera(index: int = 0, seconds: float = 10.0, show: bool = True, camer
     # blink measurements from this setup can't be trusted.
     from . import events as ev
     closed = ev.closed_eye_mask(rec["blink_score"], rec["ear"], rec["frame_ok"])
-    rep["blinks_detected"] = len(ev.detect_blinks(rec["t"], closed)) if len(rec) > 1 else 0
+    # deliberate slow blinks (as the overlay asks) last ~0.5-1 s; 0.5 s cap is for spontaneous blinks only
+    rep["blinks_detected"] = len(ev.detect_blinks(rec["t"], closed, max_blink_s=1.5)) if len(rec) > 1 else 0
     rep["deepest_ear_dip"] = round(ev.ear_dip_depth(rec["ear"], rec["frame_ok"]), 3) if len(rec) > 10 else None
     # Stillness test: how much did head pose and the eye baseline change between
     # the first and last 5 s? With the head braced, real change should be ~0.
@@ -161,7 +162,7 @@ def check_camera(index: int = 0, seconds: float = 10.0, show: bool = True, camer
 def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
            distance_cm: float = 55.0, seed: int = 0, save_video: bool = False,
            participant_label: str = "", camera_type: str = "webcam", mm_per_px: float | None = None,
-           protocol: str | None = None) -> Recording:
+           protocol: str | None = None, condition: str = "") -> Recording:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     cam = open_camera(index, camera_type)
@@ -274,6 +275,7 @@ def record(out_dir: str | Path, index: int = 0, screen_width_cm: float = 30.4,
         "screen": {"width_px": w, "height_px": h, "width_cm": screen_width_cm, "distance_cm": distance_cm},
         "illumination": "infrared_850nm" if camera_type == "ir" else "visible",
         "camera_type": camera_type, "mm_per_px": mm_per_px, "participant_label": participant_label,
+        "condition": condition,
         "raw_video_saved": bool(save_video), "stimulus_events": stim_events, "is_synthetic": False,
     }
     rec = Recording.from_rows(rows, meta)
