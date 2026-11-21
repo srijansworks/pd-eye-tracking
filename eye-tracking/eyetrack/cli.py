@@ -6,6 +6,7 @@
   video          run the tracker on a video file (uncalibrated)
   simulate       make a synthetic recording with known ground truth
   benchmark      synthetic truth-vs-measured table at several frame rates
+  dropouts       pool tracking cut-outs across recording folders (people x lighting)
   upload         send measurements.json to the backend API
 """
 
@@ -16,7 +17,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import calibration, features
+from . import calibration, dropouts, features
 from .export import build_batch, write_outputs
 from .recording import Recording
 
@@ -32,10 +33,14 @@ def analyze(rec_dir: str | Path, session_id: str | None = None, plot: bool = Tru
     ms, q = features.compute(rec, stim)
     batch = build_batch(rec, ms, q, stim, session_id=session_id)
     paths = write_outputs(rec_dir, batch)
+    drops = dropouts.write_dropouts(rec, rec_dir)
+    paths["dropouts"] = rec_dir / "dropouts.csv"
     if plot:
         from .plot import plot_recording
         paths["plot"] = plot_recording(rec, rec_dir / "plot.png", stim)
     _print_summary(ms, q)
+    print(f"Tracking cut-outs: {len(drops)}, longest "
+          f"{max((d['duration_s'] for d in drops), default=0):.2f} s (see dropouts.csv)")
     print("\nWrote:", ", ".join(str(p) for p in paths.values()))
     return batch
 
@@ -94,6 +99,7 @@ def main(argv: list[str] | None = None) -> None:
     c.add_argument("--seconds", type=float, default=10); c.add_argument("--no-window", action="store_true")
     c.add_argument("--save", help="folder to save the tracked samples")
     c.add_argument("--camera-type", choices=["webcam", "ir"], default="webcam")
+    c.add_argument("--label", default="", help="pseudonymous label only — never a real name")
 
     r = sub.add_parser("record")
     r.add_argument("--out", required=True)
@@ -105,6 +111,8 @@ def main(argv: list[str] | None = None) -> None:
     r.add_argument("--protocol", choices=["eye_v1", "eye_v2", "eye_v3", "eye_v4"],
                    help="default: eye_v4 (antisaccade + light reflex) with --camera-type ir, else eye_v2")
     r.add_argument("--label", default="", help="pseudonymous label only — never a real name")
+    for sp in (c, r):
+        sp.add_argument("--condition", default="", help="test condition tag, e.g. dim, backlit, side")
     r.add_argument("--save-video", action="store_true")
     r.add_argument("--consent-confirmed", action="store_true",
                    help="required with --save-video: participant agreed to raw video storage")
@@ -124,6 +132,9 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--fps", type=float, default=30); s.add_argument("--noise-deg", type=float, default=0.4)
     s.add_argument("--seed", type=int, default=1)
     sub.add_parser("benchmark")
+    dr = sub.add_parser("dropouts", help="pool tracking cut-outs across recording folders")
+    dr.add_argument("root", help="folder containing recording folders, e.g. recordings")
+    dr.add_argument("--out", help="write the per-session table to this CSV")
     u = sub.add_parser("upload"); u.add_argument("dir")
     g = u.add_mutually_exclusive_group(required=True)
     g.add_argument("--session-id"); g.add_argument("--participant", help="participant code, creates a session")
@@ -142,14 +153,17 @@ def main(argv: list[str] | None = None) -> None:
         rep = check_camera(args.camera, args.seconds, show=not args.no_window, camera_type=args.camera_type)
         rec = rep.pop("frames_raw")
         if args.save:
+            rec.meta.update(participant_label=args.label, condition=args.condition, source="check-camera")
             rec.save(args.save)
+            dropouts.write_dropouts(rec, args.save)
         print(json.dumps(rep, indent=2))
     elif args.cmd == "record":
         if args.save_video and not args.consent_confirmed:
             sys.exit("--save-video requires --consent-confirmed (raw facial video is identifiable).")
         from .live import record
         record(args.out, args.camera, args.screen_width_cm, args.distance_cm, args.seed,
-               args.save_video, args.label, camera_type=args.camera_type, mm_per_px=args.mm_per_px, protocol=args.protocol)
+               args.save_video, args.label, camera_type=args.camera_type, mm_per_px=args.mm_per_px,
+               protocol=args.protocol, condition=args.condition)
         analyze(args.out)
     elif args.cmd == "analyze":
         analyze(args.dir, args.session_id)
@@ -171,6 +185,17 @@ def main(argv: list[str] | None = None) -> None:
         Path(args.out, "truth.json").write_text(json.dumps(truth, indent=2))
         analyze(args.out)
         print("\nGround truth:", json.dumps(truth, indent=2))
+    elif args.cmd == "dropouts":
+        rows = dropouts.pool(args.root)
+        if args.out:
+            dropouts.write_csv(args.out, rows, dropouts.POOL_FIELDS)
+        print(f"{'session':24s} {'label':8s} {'condition':12s} {'valid':>6s} {'drops':>5s} "
+              f"{'/min':>5s} {'longest_s':>9s} {'bright':>6s} {'iris':>5s}  flags")
+        for r in rows:
+            print(f"{r['session']:24s} {r['label']:8s} {r['condition']:12s} {r['valid_frac']:6.3f} "
+                  f"{r['n_dropouts']:5d} {r['dropouts_per_min']:5.1f} {r['longest_dropout_s']:9.2f} "
+                  f"{r['brightness_median']:6.1f} {r['iris_px_median']:5.1f}  {r['flags']}")
+        print("\nBy condition:", json.dumps(dropouts.by_condition(rows), indent=2))
     elif args.cmd == "benchmark":
         benchmark()
     elif args.cmd == "upload":

@@ -285,3 +285,23 @@ def test_antisaccade_is_slower_than_prosaccade_and_valid_batch():
     rec.meta["started_at_utc"] = "2026-11-04T20:00:00.000Z"
     batch = build_batch(rec, ms, q, stim, session_id="00000000-0000-4000-8000-000000000001")
     jsonschema.validate(batch, json.loads(SCHEMA.read_text()), format_checker=jsonschema.FormatChecker())
+
+
+# ---------- tracking cut-outs ----------------------------------------------
+def test_dropouts_found_with_durations_and_pooled(tmp_path):
+    from eyetrack import dropouts
+    t = np.arange(300) / 30.0
+    ok = np.ones(300)
+    ok[60:90] = 0     # 1.0 s gap from t=2.0
+    ok[200:203] = 0   # 0.1 s gap from t=6.667
+    rows = [{"t": ti, "frame_ok": o, "brightness": 80.0, "iris_px": 20.0, "yaw": 1.0,
+             "pitch": 2.0, "ear": 0.25, "task": "check"} for ti, o in zip(t, ok)]
+    rec = Recording.from_rows(rows, {"participant_label": "P01", "condition": "dim"})
+    d = dropouts.find_dropouts(rec)
+    assert [x["n_frames"] for x in d] == [30, 3]
+    assert d[0]["start_t"] == pytest.approx(2.0) and d[0]["duration_s"] == pytest.approx(1.0, abs=0.01)
+    assert d[1]["duration_s"] == pytest.approx(0.1, abs=0.01)
+    assert d[0]["brightness_before"] == 80.0
+    rec.save(tmp_path / "P01_dim")
+    (row,) = dropouts.pool(tmp_path)
+    assert row["n_dropouts"] == 2 and row["condition"] == "dim" and row["valid_frac"] == pytest.approx(0.89)
